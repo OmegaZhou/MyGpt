@@ -1,0 +1,4 @@
+node_modules
+*.rsa
+api_key
+password.json
