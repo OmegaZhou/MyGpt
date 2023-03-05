@@ -175,9 +175,9 @@ exports.chat = async function(req, res){
         req.session.each_tokens.shift()
         req.session.content.shift()
     }
-    console.log(req.session.content)
-    console.log(req.session.total_tokens)
-    console.log(req.session.each_tokens)
+    // console.log(req.session.content)
+    // console.log(req.session.total_tokens)
+    // console.log(req.session.each_tokens)
     res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
 }
 
