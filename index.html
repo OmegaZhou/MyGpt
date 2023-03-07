@@ -123,16 +123,22 @@
                 createInfo(front.messages[0].content, false)
                 scrollChatBoxToBottom("#chat_box","#inner_box")
                 is_wait = true
-                $.post({url:"/chat/api/chat", data:JSON.stringify(front), contentType: 'application/json; charset=utf-8'}, sucess=>{
-                    console.log(sucess)
-                    var messages = sucess.result.messages
-                    var usage = sucess.result.tokens
-                    var now_send_tokens = parseInt($('#send_token').html())
-                    var now_receive_tokens = parseInt($('#receive_token').html())
-                    $('#send_token').html(now_send_tokens+usage.prompt_tokens)
-                    $('#receive_token').html(now_receive_tokens+usage.completion_tokens)
-                    for(var message of messages){
-                        createInfo(message.message.content, true)
+                $.post({url:"/chat/api/chat", data:JSON.stringify(front), contentType: 'application/json; charset=utf-8'}, success=>{
+                    console.log(success)
+                    if(success.message != "success"){
+                        var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
+                        createInfo(err_info, true)
+                    }else{
+                        var messages = success.result.messages
+                        var usage = success.result.tokens
+                        var now_send_tokens = parseInt($('#send_token').html())
+                        var now_receive_tokens = parseInt($('#receive_token').html())
+                        $('#send_token').html(now_send_tokens+usage.prompt_tokens)
+                        $('#receive_token').html(now_receive_tokens+usage.completion_tokens)
+                        for(var message of messages){
+                            createInfo(message.message.content, true)
+                        }
+
                     }
                     scrollChatBoxToBottom("#chat_box","#inner_box")
                     if(chat_queue.length==0){
@@ -140,6 +146,7 @@
                     }else{
                         asyn_send()
                     }
+
                 })
             }
         }

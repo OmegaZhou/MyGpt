@@ -138,7 +138,7 @@ exports.chat = async function(req, res){
         messages = data.messages
     }
     chat_data = {
-        model:data.model,
+        model:"data.model",
         messages:messages
     }
     header = {
@@ -147,38 +147,42 @@ exports.chat = async function(req, res){
     }
     //var req_config = {headers: header, httpsAgent: torProxyAgent,httpAgent: torProxyAgent}
     var req_config =  {headers: header}
-    var chat_res = await axios.post("https://api.openai.com/v1/chat/completions", chat_data, req_config)
-    var usage = chat_res.data['usage']
-    var res_messages = []
-    for(var message of chat_res.data.choices){
-        res_messages.push(message.message)
-    }
-    var new_prompt_tokens = usage.prompt_tokens
-    var completion_tokens = usage.completion_tokens
-    if(data.use_content){
-        new_prompt_tokens = usage.prompt_tokens - req.session.total_tokens
+    return axios.post("https://api.openai.com/v1/chat/completions", chat_data, req_config).then(chat_res=>{
+        var usage = chat_res.data['usage']
+        var res_messages = []
+        for(var message of chat_res.data.choices){
+            res_messages.push(message.message)
+        }
+        var new_prompt_tokens = usage.prompt_tokens
+        var completion_tokens = usage.completion_tokens
+        if(data.use_content){
+            new_prompt_tokens = usage.prompt_tokens - req.session.total_tokens
+    
+        }
+        for(var i=0;i<data.messages.length-1;++i){
+            req.session.each_tokens.push(0)
+        }
+        req.session.each_tokens.push(new_prompt_tokens)
+        for(var i=0;i<res_messages.length-1;++i){
+            req.session.each_tokens.push(0)
+        }
+        req.session.each_tokens.push(completion_tokens)
+        req.session.content = req.session.content.concat(data.messages, res_messages)
+        req.session.total_tokens += new_prompt_tokens + completion_tokens
+    
+        while(req.session.total_tokens > 3900){
+            req.session.total_tokens -= req.session.each_tokens[0]
+            req.session.each_tokens.shift()
+            req.session.content.shift()
+        }
+        // console.log(req.session.content)
+        // console.log(req.session.total_tokens)
+        // console.log(req.session.each_tokens)
+        res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
+    }).catch(err=>{
+        res.json(createRes("error",{code: err.code, message:err.message}))
+    })
 
-    }
-    for(var i=0;i<data.messages.length-1;++i){
-        req.session.each_tokens.push(0)
-    }
-    req.session.each_tokens.push(new_prompt_tokens)
-    for(var i=0;i<res_messages.length-1;++i){
-        req.session.each_tokens.push(0)
-    }
-    req.session.each_tokens.push(completion_tokens)
-    req.session.content = req.session.content.concat(data.messages, res_messages)
-    req.session.total_tokens += new_prompt_tokens + completion_tokens
-
-    while(req.session.total_tokens > 3900){
-        req.session.total_tokens -= req.session.each_tokens[0]
-        req.session.each_tokens.shift()
-        req.session.content.shift()
-    }
-    // console.log(req.session.content)
-    // console.log(req.session.total_tokens)
-    // console.log(req.session.each_tokens)
-    res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
 }
 
 exports.clear = (req,res)=>{
