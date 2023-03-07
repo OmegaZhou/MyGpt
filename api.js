@@ -138,7 +138,7 @@ exports.chat = async function(req, res){
         messages = data.messages
     }
     chat_data = {
-        model:"data.model",
+        model:data.model,
         messages:messages
     }
     header = {
