@@ -1,12 +1,22 @@
+<!DOCTYPE html>
+
 <head>
     <title>MyGpt</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <script src="js/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"
+        integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD"
+        crossorigin="anonymous"></script>
+    <link href="js/prettify-skin-sunburst.css">
+    <script src="js/prettify.js"></script>
     <script src="js/showdown.min.js"></script>
     <script src="js/showdown-prettify.min.js"></script>
+    <script src="js/showdown-katex.js"></script>
     <style>
 
     </style>
@@ -29,12 +39,11 @@
                 }
             })
         }
-        
-        function scrollChatBoxToBottom(out_box_id, inner_box_id)
-        {
+
+        function scrollChatBoxToBottom(out_box_id, inner_box_id) {
             var out_h = $(out_box_id).height()
             var in_h = $(inner_box_id).height()
-            var val = Math.max(in_h-out_h, 0)
+            var val = Math.max(in_h - out_h, 0)
             $(out_box_id).scrollTop(val)
         }
     </script>
@@ -42,7 +51,7 @@
 </head>
 
 <body style="background:url('img/login.jpg');background-size:cover;">
-    <div>
+    <div style="height: 100vh;">
         <div class="container text-center">
             <h1 class="mx-auto">MyGpt</h1>
         </div>
@@ -50,7 +59,7 @@
             <div class="row">
                 <div class="col-4">
                     <div class="input-group">
-                        <span class="input-group-text" >对话模型</span>
+                        <span class="input-group-text">对话模型</span>
                         <select class="form-select" aria-label="选择模型" id="model">
                             <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
                             <option selected value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
@@ -60,7 +69,7 @@
                 <div class="col-2">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" value="" id="content_save">
-                        <label class="form-check-label" for="flexCheckDefault">记忆上下文</label>
+                        <label class="form-check-label" for="content_save">记忆上下文</label>
                     </div>
                 </div>
                 <div class="col-4">
@@ -71,7 +80,7 @@
                         <div class="col-6">
                             <b>接收tokens数: </b><span id="receive_token">0</span>
                         </div>
-                      </div>
+                    </div>
                 </div>
                 <div class="col-2">
                     <div class="form-check">
@@ -80,19 +89,24 @@
                 </div>
             </div>
         </div>
-        <div id="chat_box" class="container h-75 overflow-y-auto" >
+        <div id="chat_box" class="container h-75 overflow-y-auto">
             <div id="inner_box">
             </div>
         </div>
         <div class="container">
-            <div rows="3">
+            <div>
                 <div class="input-group">
-                    <button id="user_type" style="font-family: Consolas,monospace; white-space:pre;" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" value="user">&nbspuser&nbsp</button>
+                    <button id="user_type" style="font-family: Consolas,monospace; white-space:pre;"
+                        class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" value="user">&nbsp;user&nbsp;</button>
                     <ul class="dropdown-menu">
-                      <li><a class="dropdown-item" href="#" onclick="changeUserType('user','&nbspuser&nbsp')">user</a></li>
-                      <li><a class="dropdown-item" href="#" onclick="changeUserType('system','system')">system</a></li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="changeUserType('user','&nbsp;user&nbsp;')">user</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="changeUserType('system','system')">system</a>
+                        </li>
                     </ul>
-                    <textarea id="textbox" class="form-control" id="" rows="2"></textarea>
+                    <textarea id="textbox" class="form-control" rows="2"></textarea>
                     <button type="submit" class="btn btn-primary mb-3" onclick="send()">发送</button>
                 </div>
             </div>
@@ -102,7 +116,23 @@
 
 
     <script>
-        var converter = new showdown.Converter({extensions: ['prettify']});
+        var converter = new showdown.Converter(
+            {
+                extensions: ['prettify',
+                    showdownKatex({
+                        // maybe you want katex to throwOnError
+                        throwOnError: true,
+                        // disable displayMode
+                        displayMode: false,
+                        // change errorColor to blue
+                        errorColor: '#1500ff',
+                        delimiters: [
+                            { left: "$$", right: "$$", display: true },
+                            { left: "$", right: "$", display: false },
+                            { left: '~', right: '~', display: false, asciimath: true },
+                        ]
+                    })]
+            });
         var chat_queue = []
         var is_wait = false
         function keySend(event) {
@@ -110,41 +140,39 @@
                 send()
             }
         }
-        function changeUserType(type, html_val)
-        {
+        function changeUserType(type, html_val) {
             $("#user_type").html(html_val)
             $("#user_type").val(type)
         }
-        function asyn_send()
-        {
-            if(chat_queue.length==0){
+        function asyn_send() {
+            if (chat_queue.length == 0) {
                 return;
-            }else{
+            } else {
                 var front = chat_queue.shift()
                 createInfo(front.messages[0].content, false)
-                scrollChatBoxToBottom("#chat_box","#inner_box")
+                scrollChatBoxToBottom("#chat_box", "#inner_box")
                 is_wait = true
-                $.post({url:"/chat/api/chat", data:JSON.stringify(front), contentType: 'application/json; charset=utf-8'}, success=>{
+                $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
                     console.log(success)
-                    if(success.message != "success"){
+                    if (success.message != "success") {
                         var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
                         createInfo(err_info, true)
-                    }else{
+                    } else {
                         var messages = success.result.messages
                         var usage = success.result.tokens
                         var now_send_tokens = parseInt($('#send_token').html())
                         var now_receive_tokens = parseInt($('#receive_token').html())
-                        $('#send_token').html(now_send_tokens+usage.prompt_tokens)
-                        $('#receive_token').html(now_receive_tokens+usage.completion_tokens)
-                        for(var message of messages){
+                        $('#send_token').html(now_send_tokens + usage.prompt_tokens)
+                        $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
+                        for (var message of messages) {
                             createInfo(message.message.content, true)
                         }
 
                     }
-                    scrollChatBoxToBottom("#chat_box","#inner_box")
-                    if(chat_queue.length==0){
+                    scrollChatBoxToBottom("#chat_box", "#inner_box")
+                    if (chat_queue.length == 0) {
                         is_wait = false
-                    }else{
+                    } else {
                         asyn_send()
                     }
 
@@ -152,53 +180,53 @@
             }
         }
 
-        function send()
-        {
+        function send() {
             var text = $('#textbox').val()
             text = $.trim(text)
-            if(text.length==0){
+            if (text.length == 0) {
                 return;
             }
             console.log(text)
-            
+
             var model = $("#model").val()
-            var chat_data = {model:model, messages:[{role:$("#user_type").val(), content: text}], use_content:$("#content_save")[0].checked}
+            var chat_data = { model: model, messages: [{ role: $("#user_type").val(), content: text }], use_content: $("#content_save")[0].checked }
             chat_queue.push(chat_data)
-            if(!is_wait){
+            if (!is_wait) {
                 asyn_send()
             }
             console.log(chat_data)
             $('#textbox').val('')
         }
-        function newCHat()
-        {
+        function newCHat() {
             is_wait = true
             console.log("fuck")
-            $.post("/chat/api/clear", success=>{
+            $.post("/chat/api/clear", success => {
                 console.log(success)
-                if(success.message=="success"){
+                if (success.message == "success") {
                     $('#inner_box').html('')
-                    scrollChatBoxToBottom("#chat_box","#inner_box")
+                    scrollChatBoxToBottom("#chat_box", "#inner_box")
                 }
-                if(chat_queue.length==0){
+                if (chat_queue.length == 0) {
                     is_wait = false
-                }else{
+                } else {
                     asyn_send()
                 }
             })
         }
-        function createInfo(md, left){
+        function createInfo(md, left) {
             var chat_item;
-            if(left){
+            if (left) {
                 chat_item = $("<div class='col-8 border px-2 my-1' style='border-radius: 10px; background-color: #fbfbfb; opacity:0.8;'></div>")
-            }else{
+            } else {
                 chat_item = $("<div class='offset-4 col-8 text-end border px-2 my-1' style='border-radius: 10px; background-color: #6096B4;opacity:0.8;'></div>")
             }
             var html = converter.makeHtml(md);
             chat_item.html(html)
             $('#inner_box').append(chat_item)
+            prettyPrint()
+
         }
-        
+
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
         })
