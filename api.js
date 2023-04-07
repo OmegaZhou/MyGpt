@@ -153,13 +153,6 @@ exports.chat = async function(req, res){
 
 }
 
-exports.clear = (req,res)=>{
-    req.session.total_tokens = 0
-    req.session.each_tokens = []
-    req.session.content = []
-    res.json(createRes("success"))
-}
-
 exports.get_pub_rsa=function(req,res){
     res.send(pub_key)
 }

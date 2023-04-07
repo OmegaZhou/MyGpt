@@ -72,6 +72,10 @@
                         <input class="form-check-input" type="checkbox" value="" id="content_save">
                         <label class="form-check-label" for="content_save">记忆上下文</label>
                     </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" onchange="setCheatMode()" value="" id="cheat">
+                        <label class="form-check-label" for="cheat">欺诈模式</label>
+                    </div>
                 </div>
                 <div class="col-4">
                     <div class="row align-items-start">
@@ -99,12 +103,16 @@
                 <div class="input-group">
                     <button id="user_type" style="font-family: Consolas,monospace; white-space:pre;"
                         class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false" value="user">&nbsp;user&nbsp;</button>
+                        aria-expanded="false" value="user">&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;</button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#"
-                                onclick="changeUserType('user','&nbsp;user&nbsp;')">user</a>
+                                onclick="changeUserType('user','&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;')">user</a>
                         </li>
-                        <li><a class="dropdown-item" href="#" onclick="changeUserType('system','system')">system</a>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="changeUserType('system','&nbsp;&nbsp;system&nbsp;')">system</a>
+                        </li>
+                        <li id="assistant_li" class="d-none"><a class="dropdown-item" href="#"
+                                onclick="changeUserType('assistant','assistant')">assistant</a>
                         </li>
                     </ul>
                     <textarea id="textbox" class="form-control" rows="2"></textarea>
@@ -151,51 +159,60 @@
                 return;
             } else {
                 var front = chat_queue.shift()
-                createInfo(front.messages[0].content, false)
+                createInfo(front.messages[0].content, roleIsLeft(front.messages[0].role))
                 scrollChatBoxToBottom("#chat_box", "#inner_box")
                 is_wait = true
-                var now_tokens = 0;
-                if(front.use_content){
-                    let tmp = chat_manager.getAllMessage(3900)
-                    now_tokens = tmp.tokens
-                    front.messages = tmp.messages.concat(front.messages)
-                }
-                $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
-                    console.log(success)
-                    if (success.message != "success") {
-                        var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
-                        createInfo(err_info, true)
-                    } else {
-                        var messages = success.result.messages
-                        var usage = success.result.tokens
-                        var now_send_tokens = parseInt($('#send_token').html())
-                        var now_receive_tokens = parseInt($('#receive_token').html())
-                        $('#send_token').html(now_send_tokens + usage.prompt_tokens)
-                        $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                        chat_manager.addNewMessage(front.messages[front.messages.length-1], usage.prompt_tokens - now_tokens)
-                        for (var message of messages) {
-                            createInfo(message.message.content, true)
-                        }
-                        for(var i = 0; i< messages.length;++i){
-                            if(i!=messages.length-1){
-                                chat_manager.addNewMessage(messages[i].message, 0)
-                            }else{
-                                chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
-                            }   
-                        }
-
-                    }
-                    scrollChatBoxToBottom("#chat_box", "#inner_box")
+                if (front.is_cheat) {
+                    chat_manager.addNewMessage(front.messages[0], 0)
                     if (chat_queue.length == 0) {
                         is_wait = false
                     } else {
                         asyn_send()
                     }
+                } else {
+                    var now_tokens = 0;
+                    if (front.use_content) {
+                        let tmp = chat_manager.getAllMessage(3900)
+                        now_tokens = tmp.tokens
+                        front.messages = tmp.messages.concat(front.messages)
+                    }
+                    $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
+                        console.log(success)
+                        if (success.message != "success") {
+                            var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
+                            createInfo(err_info, true)
+                        } else {
+                            var messages = success.result.messages
+                            var usage = success.result.tokens
+                            var now_send_tokens = parseInt($('#send_token').html())
+                            var now_receive_tokens = parseInt($('#receive_token').html())
+                            $('#send_token').html(now_send_tokens + usage.prompt_tokens)
+                            $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
+                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
+                            for (var message of messages) {
+                                createInfo(message.message.content, roleIsLeft(message.message.role))
+                            }
+                            for (var i = 0; i < messages.length; ++i) {
+                                if (i != messages.length - 1) {
+                                    chat_manager.addNewMessage(messages[i].message, 0)
+                                } else {
+                                    chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
+                                }
+                            }
 
-                })
+                        }
+                        scrollChatBoxToBottom("#chat_box", "#inner_box")
+                        if (chat_queue.length == 0) {
+                            is_wait = false
+                        } else {
+                            asyn_send()
+                        }
+
+                    })
+                }
+
             }
         }
-
         function send() {
             var text = $('#textbox').val()
             text = $.trim(text)
@@ -205,7 +222,10 @@
             console.log(text)
 
             var model = $("#model").val()
-            var chat_data = { model: model, messages: [{ role: $("#user_type").val(), content: text }], use_content: $("#content_save")[0].checked }
+            var chat_data = {
+                model: model, messages: [{ role: $("#user_type").val(), content: text }],
+                use_content: $("#content_save")[0].checked, is_cheat: $('#cheat')[0].checked
+            }
             chat_queue.push(chat_data)
             if (!is_wait) {
                 asyn_send()
@@ -214,20 +234,27 @@
             $('#textbox').val('')
         }
         function newCHat() {
-            is_wait = true
-            console.log("fuck")
-            $.post("/chat/api/clear", success => {
-                console.log(success)
-                if (success.message == "success") {
-                    $('#inner_box').html('')
-                    scrollChatBoxToBottom("#chat_box", "#inner_box")
+            chat_manager.clear()
+            $('#inner_box').html('')
+            scrollChatBoxToBottom("#chat_box", "#inner_box")
+        }
+        function roleIsLeft(role) {
+            if (role == 'assistant') {
+                return true
+            } else {
+                return false
+            }
+        }
+        function setCheatMode()
+        {
+            if(!$('#cheat')[0].checked){
+                $("#assistant_li").addClass('d-none')
+                if($("#user_type").val() == 'assistant'){
+                    changeUserType('user','&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;')
                 }
-                if (chat_queue.length == 0) {
-                    is_wait = false
-                } else {
-                    asyn_send()
-                }
-            })
+            }else{
+                $("#assistant_li").removeClass('d-none')
+            }
         }
         function createInfo(md, left) {
             var chat_item;

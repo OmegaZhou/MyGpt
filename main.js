@@ -58,7 +58,6 @@ app.use(API_PATH, (req, res, next)=>{
     }
 })
 app.post(API_PATH + 'chat', api.chat)
-app.post(API_PATH + 'clear', api.clear)
 
 
 app.listen(20217, function () {
