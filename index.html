@@ -17,6 +17,7 @@
     <script src="js/showdown.min.js"></script>
     <script src="js/showdown-prettify.min.js"></script>
     <script src="js/showdown-katex.js"></script>
+    <script src="js/chat.js"></script>
     <style>
 
     </style>
@@ -116,6 +117,7 @@
 
 
     <script>
+        var chat_manager = new ChatManager()
         var converter = new showdown.Converter(
             {
                 extensions: ['prettify',
@@ -152,6 +154,12 @@
                 createInfo(front.messages[0].content, false)
                 scrollChatBoxToBottom("#chat_box", "#inner_box")
                 is_wait = true
+                var now_tokens = 0;
+                if(front.use_content){
+                    let tmp = chat_manager.getAllMessage(3900)
+                    now_tokens = tmp.tokens
+                    front.messages = tmp.messages.concat(front.messages)
+                }
                 $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
                     console.log(success)
                     if (success.message != "success") {
@@ -164,8 +172,16 @@
                         var now_receive_tokens = parseInt($('#receive_token').html())
                         $('#send_token').html(now_send_tokens + usage.prompt_tokens)
                         $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
+                        chat_manager.addNewMessage(front.messages[front.messages.length-1], usage.prompt_tokens - now_tokens)
                         for (var message of messages) {
                             createInfo(message.message.content, true)
+                        }
+                        for(var i = 0; i< messages.length;++i){
+                            if(i!=messages.length-1){
+                                chat_manager.addNewMessage(messages[i].message, 0)
+                            }else{
+                                chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
+                            }   
                         }
 
                     }
@@ -226,7 +242,6 @@
             prettyPrint()
 
         }
-
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
         })

@@ -117,9 +117,6 @@ exports.login = function (req, res) {
     user = decrypt(user)
     if(auth.check_user(user.user, user.password)){
         req.session.login = true
-        req.session.content = []
-        req.session.total_tokens = 0
-        req.session.each_tokens = []
         res.json(createRes("success"))
     }else{
         req.app.locals.ip_record.tryFail(req.clientIp)
@@ -131,12 +128,7 @@ exports.login = function (req, res) {
 
 exports.chat = async function(req, res){
     var data = req.body
-    var messages;
-    if(data.use_content){
-        messages = req.session.content.concat(data.messages)
-    }else{
-        messages = data.messages
-    }
+    var messages = data.messages
     chat_data = {
         model:data.model,
         messages:messages
@@ -153,31 +145,6 @@ exports.chat = async function(req, res){
         for(var message of chat_res.data.choices){
             res_messages.push(message.message)
         }
-        var new_prompt_tokens = usage.prompt_tokens
-        var completion_tokens = usage.completion_tokens
-        if(data.use_content){
-            new_prompt_tokens = usage.prompt_tokens - req.session.total_tokens
-    
-        }
-        for(var i=0;i<data.messages.length-1;++i){
-            req.session.each_tokens.push(0)
-        }
-        req.session.each_tokens.push(new_prompt_tokens)
-        for(var i=0;i<res_messages.length-1;++i){
-            req.session.each_tokens.push(0)
-        }
-        req.session.each_tokens.push(completion_tokens)
-        req.session.content = req.session.content.concat(data.messages, res_messages)
-        req.session.total_tokens += new_prompt_tokens + completion_tokens
-    
-        while(req.session.total_tokens > 3900){
-            req.session.total_tokens -= req.session.each_tokens[0]
-            req.session.each_tokens.shift()
-            req.session.content.shift()
-        }
-        // console.log(req.session.content)
-        // console.log(req.session.total_tokens)
-        // console.log(req.session.each_tokens)
         res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
     }).catch(err=>{
         var real_error = err.response.data.error
