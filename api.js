@@ -7,7 +7,7 @@ const socks = require("socks-proxy-agent")
 const pub_key = fs.readFileSync("./rsa_pub.rsa")
 auth.read_user_info("password.json")
 API_KEY = fs.readFileSync("./api_key")
-//const torProxyAgent = new socks.SocksProxyAgent("socks5://127.0.0.1:10808");
+const torProxyAgent = new socks.SocksProxyAgent("socks5://127.0.0.1:10808");
 class AccessRecord
 {
     constructor()
@@ -180,7 +180,8 @@ exports.chat = async function(req, res){
         // console.log(req.session.each_tokens)
         res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
     }).catch(err=>{
-        res.json(createRes("error",{code: err.code, message:err.message}))
+        var real_error = err.response.data.error
+        res.json(createRes("error",{code: real_error.code, message:real_error.message, data: real_error, server_error_data: {code: err.code, message:err.message}}))
     })
 
 }
@@ -212,3 +213,5 @@ function decrypt(user){
     ret.password = private_key.decrypt(user.password).toString()
     return ret
 }
+
+exports.createRes = createRes
