@@ -28,6 +28,23 @@ class ChatManager
         ++i
         return {tokens: sum, messages : this.messages.slice(i, this.tokens.length)}
     }
+    deleteMessage(del_list){
+        var j = 0;
+        var new_tokens = []
+        var new_messages = []
+        console.log(del_list)
+        for(var i=0;i<this.tokens.length;++i){
+            if(j<del_list.length && i==del_list[j]){
+                ++j;
+                continue;
+            }else{
+                new_tokens.push(this.tokens[i])
+                new_messages.push(this.messages[i])
+            }
+        }
+        this.tokens = new_tokens;
+        this.messages = new_messages;
+    }
     getSelectedMessage(indices){
         var total_tokens = 0
         var total_messages = []

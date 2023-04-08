@@ -147,7 +147,13 @@ exports.chat = async function(req, res){
         }
         res.json(createRes("success", {messages:chat_res.data.choices, tokens:usage}))
     }).catch(err=>{
-        var real_error = err.response.data.error
+        var real_error;
+        if(err.response && err.response.data && err.response.data.error){
+            real_error = err.response.data.error
+        }else{
+            real_error = {code: err.code, message:err.message}
+        }
+         
         res.json(createRes("error",{code: real_error.code, message:real_error.message, data: real_error, server_error_data: {code: err.code, message:err.message}}))
     })
 

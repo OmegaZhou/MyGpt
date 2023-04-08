@@ -18,8 +18,8 @@
     <script src="js/showdown-prettify.min.js"></script>
     <script src="js/showdown-katex.js"></script>
     <script src="js/chat.js"></script>
-    <style>
-
+    <style type="text/css">
+        .chat-select {}
     </style>
     <script>
         function ajax_get(url, callback) {
@@ -86,6 +86,18 @@
                             <b>接收tokens数: </b><span id="receive_token">0</span>
                         </div>
                     </div>
+                    <div class="row align-items-start">
+                        <div class="form-check col-4">
+                            <input class="form-check-input" type="checkbox" onchange="setEditMode()" value=""
+                                id="edit_mode">
+                            <label class="form-check-label" for="edit_mode">编辑模式</label>
+                        </div>
+                        <div id="edit_panel" class="invisible col-8">
+                            <button onclick="deleteChat()" class="btn btn-sm btn-light">删除</button>
+                            <button onclick="editChat()" class="btn btn-sm btn-light">编辑</button>
+
+                        </div>
+                    </div>
                 </div>
                 <div class="col-2">
                     <div class="form-check">
@@ -145,6 +157,7 @@
             });
         var chat_queue = []
         var is_wait = false
+        var error_id = 0
         function keySend(event) {
             if ((event.keyCode == 10 || event.keyCode == 13) && (event.ctrlKey || event.metaKey)) {
                 send()
@@ -180,7 +193,8 @@
                         console.log(success)
                         if (success.message != "success") {
                             var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
-                            createInfo(err_info, true)
+                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+                            createInfo(err_info, true, true)
                         } else {
                             var messages = success.result.messages
                             var usage = success.result.tokens
@@ -235,6 +249,9 @@
         }
         function newCHat() {
             chat_manager.clear()
+            chat_queue = []
+            error_id = 0
+            is_wait = false
             $('#inner_box').html('')
             scrollChatBoxToBottom("#chat_box", "#inner_box")
         }
@@ -245,29 +262,133 @@
                 return false
             }
         }
-        function setCheatMode()
-        {
-            if(!$('#cheat')[0].checked){
+        function setCheatMode() {
+            if (!$('#cheat')[0].checked) {
                 $("#assistant_li").addClass('d-none')
-                if($("#user_type").val() == 'assistant'){
-                    changeUserType('user','&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;')
+                if ($("#user_type").val() == 'assistant') {
+                    changeUserType('user', '&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;')
                 }
-            }else{
+            } else {
                 $("#assistant_li").removeClass('d-none')
             }
         }
-        function createInfo(md, left) {
+        function getChatLength() {
+            return chat_manager.tokens.length
+        }
+        function getIndexFromId(id) {
+            return parseInt(id.replace(/[^\d]/g, ""))
+        }
+        function getChatContentId(index) {
+            return "chat-content" + index
+        }
+        function getSelecteChatBoxId(index) {
+            return 'select' + index
+        }
+        function createInfo(md, left, is_error) {
             var chat_item;
+            var total_div;
+            var check_box;
             if (left) {
-                chat_item = $("<div class='col-8 border px-2 my-1' style='border-radius: 10px; background-color: #fbfbfb; opacity:0.8;'></div>")
+                total_div = $("<div class='col-8'></div>")
+                check_box = $('<input class="form-check-input chat-select" type="checkbox">')
+                chat_item = $("<label class='border px-2 my-1' style='border-radius: 10px; background-color: #fbfbfb; opacity:0.8;'></label>")
             } else {
-                chat_item = $("<div class='offset-4 col-8 text-end border px-2 my-1' style='border-radius: 10px; background-color: #6096B4;opacity:0.8;'></div>")
+                total_div = $("<div class='text-end offset-4 col-8'></div>")
+                check_box = $('<input class="form-check-input chat-select" style="float: right;" type="checkbox">')
+                chat_item = $("<label class='border px-2 my-1' style='border-radius: 10px; background-color: #6096B4;opacity:0.8;'></label>")
+            }
+            if (!$("#edit_mode")[0].checked) {
+                check_box.addClass("d-none")
             }
             var html = converter.makeHtml(md);
+            var index = getChatLength()
             chat_item.html(html)
-            $('#inner_box').append(chat_item)
+            if (is_error) {
+                total_div.addClass("chat-error")
+            } else {
+                chat_item.attr("id", getChatContentId(index))
+                check_box.attr("id", getSelecteChatBoxId(index))
+                if ($("#edit_mode")[0].checked) {
+                    chat_item.attr("for", getSelecteChatBoxId(index))
+                }
+            }
+            if (left) {
+                total_div.append(check_box)
+                total_div.append(chat_item)
+            } else {
+                total_div.append(chat_item)
+                total_div.append(check_box)
+            }
+
+            $('#inner_box').append(total_div)
             prettyPrint()
 
+        }
+        function setEditMode() {
+            var selects = $(".chat-select")
+            if ($("#edit_mode")[0].checked) {
+                selects.removeClass("d-none")
+                $("#edit_panel").removeClass("invisible")
+                selects.siblings('label').each((i, elem) => {
+                    if ($(elem.closest('div')).hasClass('chat-error')) {
+                        return
+                    } else {
+                        $(elem).attr('for', getSelecteChatBoxId(getIndexFromId($(elem).attr("id"))))
+                    }
+
+                })
+            } else {
+                selects.prop('checked', false)
+                selects.addClass("d-none")
+                $("#edit_panel").addClass("invisible")
+                selects.siblings('label').each((i, elem) => {
+                    console.log(elem)
+                    if ($(elem.closest('*')).hasClass('chat-error')) {
+                        return
+                    } else {
+                        elem.removeAttribute('for')
+                    }
+
+                })
+            }
+        }
+        function deleteChat() {
+            var selects = $(".chat-select")
+            var del_list = []
+            var del_elem = []
+            selects.each((i, elem) => {
+                if ($(elem)[0].checked) {
+                    del_elem.push($(elem.closest('div')))
+                    if ($(elem.closest('div')).hasClass('chat-error')) {
+                        return
+                    }
+                    del_list.push(getIndexFromId($(elem).attr("id")))
+                }
+            })
+            var total_l = getChatLength()
+            var remain_elem1 = []
+            var remain_elem2 = []
+            var j = 0
+            for (let i = 0; i < total_l; ++i) {
+                if (j < del_list.length && i == del_list[j]) {
+                    ++j;
+                    continue;
+                } else {
+                    remain_elem1.push($("#" + getChatContentId(i)))
+                    remain_elem2.push($("#" + getSelecteChatBoxId(i)))
+                }
+            }
+            for (var elem of del_elem) {
+                elem.remove()
+            }
+            for (let i = 0; i < remain_elem1.length; ++i) {
+                remain_elem1[i].attr("id", getChatContentId(i))
+                if(remain_elem1[i].attr('for')){
+                    remain_elem1[i].attr('for',getSelecteChatBoxId(i))
+                }
+                remain_elem2[i].attr("id", getSelecteChatBoxId(i))
+            }
+            chat_manager.deleteMessage(del_list)
         }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
