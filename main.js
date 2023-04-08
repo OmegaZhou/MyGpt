@@ -15,7 +15,7 @@ app.use(session({
     },
     saveUninitialized: false,
     resave: false,
-
+    rolling: true
 }))
 app.use(requestIp.mw())
 app.use(API_PATH+'login',api.limitLoginTime)
