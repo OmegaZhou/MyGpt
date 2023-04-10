@@ -9,4 +9,5 @@ Simple web project for calling openai gpt chat api
 - [ ] 支持导入和导出对话
 - [ ] 提供预设对话prompt模板
 - [ ] 允许粘贴图片至输入框
+- [ ] 增加对token个数计算的支持
 - [ ] 提供对不同模型的个性化支持（为GPT4作准备）
