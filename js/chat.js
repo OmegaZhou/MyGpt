@@ -5,6 +5,13 @@ class ChatManager
         this.messages = []
         this.tokens = []
     }
+    updateMessage(i, message, token){
+        this.messages[i] = message
+        if(this.messages[i].content!=message.content){
+            this.tokens[i] = token
+        }
+
+    }
     addNewMessage(message, token){
         this.messages.push(message)
         this.tokens.push(token)
@@ -57,4 +64,8 @@ class ChatManager
         }
         return {tokens: total_tokens, messages : total_messages}
     }
+}
+function generateOpenaiFormatMessage(role, message)
+{
+    return { role: role, content: message }
 }

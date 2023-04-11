@@ -18,8 +18,9 @@
     <script src="js/showdown-prettify.min.js"></script>
     <script src="js/showdown-katex.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/edit_modal.js"></script>
+    <script src="js/utils.js"></script>
     <style type="text/css">
-        .chat-select {}
     </style>
     <script>
         function ajax_get(url, callback) {
@@ -62,8 +63,8 @@
                     <div class="input-group">
                         <span class="input-group-text">对话模型</span>
                         <select class="form-select" aria-label="选择模型" id="model">
-                            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                            <option selected value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
+                            <option selected value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                            <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
                         </select>
                     </div>
                 </div>
@@ -94,7 +95,8 @@
                         </div>
                         <div id="edit_panel" class="invisible col-8">
                             <button onclick="deleteChat()" class="btn btn-sm btn-light">删除</button>
-                            <button onclick="editChat()" class="btn btn-sm btn-light">编辑</button>
+                            <button data-bs-toggle="modal" data-bs-target="#edit_modal"
+                                class="btn btn-sm btn-light">编辑</button>
 
                         </div>
                     </div>
@@ -135,6 +137,25 @@
         </div>
     </div>
 
+    <div class="modal fade" id="edit_modal" tabindex="-1" role="dialog" aria-labelledby="edit_modal_label"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="opacity:0.9;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_modal_label">对话编辑</h5>
+                    <button type="button" class="btn-close close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body" id="edit_modal_body">
+                    <!-- 动态生成对话 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="saveChat()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         var chat_manager = new ChatManager()
@@ -237,7 +258,7 @@
 
             var model = $("#model").val()
             var chat_data = {
-                model: model, messages: [{ role: $("#user_type").val(), content: text }],
+                model: model, messages: [generateOpenaiFormatMessage($("#user_type").val(), text)],
                 use_content: $("#content_save")[0].checked, is_cheat: $('#cheat')[0].checked
             }
             chat_queue.push(chat_data)
@@ -284,6 +305,35 @@
         function getSelecteChatBoxId(index) {
             return 'select' + index
         }
+        function getChatMainDivId(index) {
+            return 'chat-body' + index
+        }
+        function changeChatStatus(index, left) {
+            var total_div = $("#" + getChatMainDivId(index));
+            var check_box = $("#" + getSelecteChatBoxId(index));
+            var chat_item = $("#" + getChatContentId(index));
+            if (left) {
+                if(!total_div.hasClass("offset-4")){
+                    return
+                }
+                total_div.removeClass("offset-4").removeClass("text-end");
+                check_box.css("float", "");
+                chat_item.css("background-color", "#fbfbfb");
+            } else {
+                if(total_div.hasClass("offset-4")){
+                    return
+                }
+                total_div.addClass("text-end").addClass("offset-4");
+                check_box.css("float", "right");
+                chat_item.css("background-color", "#6096B4");
+            }
+            swapElements(check_box[0], chat_item[0])
+        }
+        function updateChatContent(i, content){
+            var html = converter.makeHtml(content);
+            var chat_item = $("#" + getChatContentId(i));
+            chat_item.html(html)
+        }
         function createInfo(md, left, is_error) {
             var chat_item;
             var total_div;
@@ -306,6 +356,7 @@
             if (is_error) {
                 total_div.addClass("chat-error")
             } else {
+                total_div.attr("id", getChatMainDivId(index))
                 chat_item.attr("id", getChatContentId(index))
                 check_box.attr("id", getSelecteChatBoxId(index))
                 if ($("#edit_mode")[0].checked) {
@@ -383,15 +434,59 @@
             }
             for (let i = 0; i < remain_elem1.length; ++i) {
                 remain_elem1[i].attr("id", getChatContentId(i))
-                if(remain_elem1[i].attr('for')){
-                    remain_elem1[i].attr('for',getSelecteChatBoxId(i))
+                if (remain_elem1[i].attr('for')) {
+                    remain_elem1[i].attr('for', getSelecteChatBoxId(i))
                 }
                 remain_elem2[i].attr("id", getSelecteChatBoxId(i))
             }
             chat_manager.deleteMessage(del_list)
         }
+        function saveChat()
+        {
+            var selects = $("#edit_modal_body select")
+            selects.each((i, elem)=>{
+                var index = getIndexFromId(elem.getAttribute("id"))
+                var type = $("#"+getModalSelectId(index)).val()
+                var message = $('#'+getModalTextareaId(index)).val()
+                if(type=='assistant'){
+                    changeChatStatus(index, true)
+                }else{
+                    changeChatStatus(index, false)
+                }
+                updateChatContent(i, message)
+                chat_manager.updateMessage(i, generateOpenaiFormatMessage(type, message), 0)
+            })
+            prettyPrint()
+            $("#edit_modal .close").click()
+        }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
+
+            $('#edit_modal').on('show.bs.modal', function (event) {
+                $('#edit_modal_body').html('')
+                var selects = $(".chat-select")
+                var id_list = []
+                selects.each((i, elem) => {
+                    if ($(elem)[0].checked) {
+                        if ($(elem.closest('div')).hasClass('chat-error')) {
+                            return
+                        }
+                        id_list.push(getIndexFromId($(elem).attr("id")))
+                    }
+                })
+                if (id_list.length == 0) {
+                    var l = getChatLength()
+                    for (var i = 0; i < l; ++i) {
+                        id_list.push(i)
+                    }
+                }
+                var chats = chat_manager.getSelectedMessage(id_list)
+                generateDialogues(id_list, 'edit_modal', id => {
+                    return chats.messages[id].role;
+                }, id => {
+                    return chats.messages[id].content;
+                })
+            })
         })
     </script>
 </body>
