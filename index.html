@@ -131,6 +131,7 @@
                     </ul>
                     <textarea id="textbox" class="form-control" rows="2"></textarea>
                     <button type="submit" class="btn btn-primary mb-3" onclick="send()">发送</button>
+                    <button type="submit" class="btn btn-primary mb-3" onclick="reload()">刷新回复</button>
                 </div>
             </div>
 
@@ -193,8 +194,11 @@
                 return;
             } else {
                 var front = chat_queue.shift()
-                createInfo(front.messages[0].content, roleIsLeft(front.messages[0].role))
-                scrollChatBoxToBottom("#chat_box", "#inner_box")
+                if (front.is_create_info) {
+                    createInfo(front.messages[0].content, roleIsLeft(front.messages[0].role))
+                    scrollChatBoxToBottom("#chat_box", "#inner_box")
+                }
+
                 is_wait = true
                 if (front.is_cheat) {
                     chat_manager.addNewMessage(front.messages[0], 0)
@@ -223,7 +227,10 @@
                             var now_receive_tokens = parseInt($('#receive_token').html())
                             $('#send_token').html(now_send_tokens + usage.prompt_tokens)
                             $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
+                            if(front.is_create_info){
+                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
+                            }
+                            
                             for (var message of messages) {
                                 createInfo(message.message.content, roleIsLeft(message.message.role))
                             }
@@ -259,7 +266,9 @@
             var model = $("#model").val()
             var chat_data = {
                 model: model, messages: [generateOpenaiFormatMessage($("#user_type").val(), text)],
-                use_content: $("#content_save")[0].checked, is_cheat: $('#cheat')[0].checked
+                use_content: $("#content_save")[0].checked,
+                is_cheat: $('#cheat')[0].checked,
+                is_create_info: true
             }
             chat_queue.push(chat_data)
             if (!is_wait) {
@@ -313,14 +322,14 @@
             var check_box = $("#" + getSelecteChatBoxId(index));
             var chat_item = $("#" + getChatContentId(index));
             if (left) {
-                if(!total_div.hasClass("offset-4")){
+                if (!total_div.hasClass("offset-4")) {
                     return
                 }
                 total_div.removeClass("offset-4").removeClass("text-end");
                 check_box.css("float", "");
                 chat_item.css("background-color", "#fbfbfb");
             } else {
-                if(total_div.hasClass("offset-4")){
+                if (total_div.hasClass("offset-4")) {
                     return
                 }
                 total_div.addClass("text-end").addClass("offset-4");
@@ -329,7 +338,7 @@
             }
             swapElements(check_box[0], chat_item[0])
         }
-        function updateChatContent(i, content){
+        function updateChatContent(i, content) {
             var html = converter.makeHtml(content);
             var chat_item = $("#" + getChatContentId(i));
             chat_item.html(html)
@@ -441,23 +450,53 @@
             }
             chat_manager.deleteMessage(del_list)
         }
-        function saveChat()
-        {
+        function saveChat() {
             var selects = $("#edit_modal_body select")
-            selects.each((i, elem)=>{
+            selects.each((i, elem) => {
                 var index = getIndexFromId(elem.getAttribute("id"))
-                var type = $("#"+getModalSelectId(index)).val()
-                var message = $('#'+getModalTextareaId(index)).val()
-                if(type=='assistant'){
+                var type = $("#" + getModalSelectId(index)).val()
+                var message = $('#' + getModalTextareaId(index)).val()
+                if (type == 'assistant') {
                     changeChatStatus(index, true)
-                }else{
+                } else {
                     changeChatStatus(index, false)
                 }
-                updateChatContent(i, message)
-                chat_manager.updateMessage(i, generateOpenaiFormatMessage(type, message), 0)
+                updateChatContent(index, message)
+                chat_manager.updateMessage(index, generateOpenaiFormatMessage(type, message), 0)
             })
             prettyPrint()
             $("#edit_modal .close").click()
+        }
+        function reload() {
+            if ($('#cheat')[0].checked) {
+                return
+            }
+            var l = getChatLength()
+            if (l == 0) {
+                return
+            }
+            var message = chat_manager.get(l - 1)
+            if (message.messages[0].role == 'assistant') {
+                if (l == 1) {
+                    return
+                } else {
+                    chat_manager.deleteMessage([l - 1])
+                    document.getElementById(getChatMainDivId(l - 1)).remove()
+                    message = chat_manager.get(l - 2)
+                }
+            }
+            var chat_data = {
+                model: $("#model").val() , messages: [generateOpenaiFormatMessage(message.messages[0].role, message.messages[0].content)],
+                use_content: $("#content_save")[0].checked,
+                is_cheat: $('#cheat')[0].checked,
+                is_create_info: false
+            }
+            chat_queue.push(chat_data)
+            
+            console.log(chat_data)
+            if (!is_wait) {
+                asyn_send()
+            }
         }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)

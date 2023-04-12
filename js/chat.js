@@ -5,12 +5,14 @@ class ChatManager
         this.messages = []
         this.tokens = []
     }
+    get(i){
+        return {tokens: [this.tokens[i]], messages : [this.messages[i]]}
+    }
     updateMessage(i, message, token){
-        this.messages[i] = message
         if(this.messages[i].content!=message.content){
             this.tokens[i] = token
         }
-
+        this.messages[i] = message
     }
     addNewMessage(message, token){
         this.messages.push(message)
