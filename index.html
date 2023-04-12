@@ -214,6 +214,8 @@
                         now_tokens = tmp.tokens
                         if (front.is_create_info) {
                             front.messages = tmp.messages.concat(front.messages)
+                        }else{
+                            front.messages = tmp.messages
                         }
                     }
                     $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
