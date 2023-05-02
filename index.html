@@ -214,47 +214,96 @@
                         now_tokens = tmp.tokens
                         if (front.is_create_info) {
                             front.messages = tmp.messages.concat(front.messages)
-                        }else{
+                        } else {
                             front.messages = tmp.messages
                         }
                     }
-                    $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
-                        console.log(success)
-                        if (success.message != "success") {
-                            var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
-                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
-                            createInfo(err_info, true, true)
-                        } else {
-                            var messages = success.result.messages
-                            var usage = success.result.tokens
-                            var now_send_tokens = parseInt($('#send_token').html())
-                            var now_receive_tokens = parseInt($('#receive_token').html())
-                            $('#send_token').html(now_send_tokens + usage.prompt_tokens)
-                            $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                            if (front.is_create_info) {
-                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
-                            }
-
-                            for (var message of messages) {
-                                createInfo(message.message.content, roleIsLeft(message.message.role))
-                            }
-                            for (var i = 0; i < messages.length; ++i) {
-                                if (i != messages.length - 1) {
-                                    chat_manager.addNewMessage(messages[i].message, 0)
-                                } else {
-                                    chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
+                    $.ajax({
+                        type: "POST",
+                        url: "/chat/api/chat",
+                        data: JSON.stringify(front),
+                        contentType: 'application/json; charset=utf-8',
+                        success: success => {
+                            console.log(success)
+                            if (success.message != "success") {
+                                var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
+                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+                                createInfo(err_info, true, true)
+                            } else {
+                                var messages = success.result.messages
+                                var usage = success.result.tokens
+                                var now_send_tokens = parseInt($('#send_token').html())
+                                var now_receive_tokens = parseInt($('#receive_token').html())
+                                $('#send_token').html(now_send_tokens + usage.prompt_tokens)
+                                $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
+                                if (front.is_create_info) {
+                                    chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
                                 }
+
+                                for (var message of messages) {
+                                    createInfo(message.message.content, roleIsLeft(message.message.role))
+                                }
+                                for (var i = 0; i < messages.length; ++i) {
+                                    if (i != messages.length - 1) {
+                                        chat_manager.addNewMessage(messages[i].message, 0)
+                                    } else {
+                                        chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
+                                    }
+                                }
+
+                            }
+                            scrollChatBoxToBottom("#chat_box", "#inner_box")
+                            if (chat_queue.length == 0) {
+                                is_wait = false
+                            } else {
+                                asyn_send()
                             }
 
+                        },
+                        error: (err,status)=>{
+                            console.log(err)
+                            var err_info = `<font color='red'>Code:\` ${err.status}\` <br/> Error: ${status} <br/>请联系管理员</font>`
+                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+                                createInfo(err_info, true, true)
                         }
-                        scrollChatBoxToBottom("#chat_box", "#inner_box")
-                        if (chat_queue.length == 0) {
-                            is_wait = false
-                        } else {
-                            asyn_send()
-                        }
-
                     })
+                    // $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
+                    //     console.log(success)
+                    //     if (success.message != "success") {
+                    //         var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
+                    //         chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+                    //         createInfo(err_info, true, true)
+                    //     } else {
+                    //         var messages = success.result.messages
+                    //         var usage = success.result.tokens
+                    //         var now_send_tokens = parseInt($('#send_token').html())
+                    //         var now_receive_tokens = parseInt($('#receive_token').html())
+                    //         $('#send_token').html(now_send_tokens + usage.prompt_tokens)
+                    //         $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
+                    //         if (front.is_create_info) {
+                    //             chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
+                    //         }
+
+                    //         for (var message of messages) {
+                    //             createInfo(message.message.content, roleIsLeft(message.message.role))
+                    //         }
+                    //         for (var i = 0; i < messages.length; ++i) {
+                    //             if (i != messages.length - 1) {
+                    //                 chat_manager.addNewMessage(messages[i].message, 0)
+                    //             } else {
+                    //                 chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
+                    //             }
+                    //         }
+
+                    //     }
+                    //     scrollChatBoxToBottom("#chat_box", "#inner_box")
+                    //     if (chat_queue.length == 0) {
+                    //         is_wait = false
+                    //     } else {
+                    //         asyn_send()
+                    //     }
+
+                    // })
                 }
 
             }
