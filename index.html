@@ -97,6 +97,8 @@
                             <button onclick="deleteChat()" class="btn btn-sm btn-light">删除</button>
                             <button data-bs-toggle="modal" data-bs-target="#edit_modal"
                                 class="btn btn-sm btn-light">编辑</button>
+                            <button data-bs-toggle="modal" data-bs-target="#edit_high"
+                                class="btn btn-sm btn-light">高级</button>
 
                         </div>
                     </div>
@@ -158,6 +160,26 @@
         </div>
     </div>
 
+    <div class="modal fade" id="edit_high" tabindex="-1" role="dialog" aria-labelledby="edit_modal_label"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="opacity:0.9;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_high_label">高级</h5>
+                    <button type="button" class="btn-close close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="input-group">
+                    <button type="submit" class="btn btn-sm btn-light mb-3" onclick="exportChats()">导出对话</button>
+                    <button type="submit" class="btn btn-sm btn-light mb-3" onclick="importChats()">导入对话</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="edit_high_close" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var chat_manager = new ChatManager()
         var converter = new showdown.Converter(
@@ -210,7 +232,7 @@
                 } else {
                     var now_tokens = 0;
                     if (front.use_content) {
-                        let tmp = chat_manager.getAllMessage(3900)
+                        let tmp = chat_manager.getAllMessage(Infinity)
                         now_tokens = tmp.tokens
                         if (front.is_create_info) {
                             front.messages = tmp.messages.concat(front.messages)
@@ -260,50 +282,20 @@
                             }
 
                         },
-                        error: (err,status)=>{
+                        error: (err, status) => {
                             console.log(err)
                             var err_info = `<font color='red'>Code:\` ${err.status}\` <br/> Error: ${status} <br/>请联系管理员</font>`
-                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
-                                createInfo(err_info, true, true)
-                        }
+                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+                            createInfo(err_info, true, true)
+                            scrollChatBoxToBottom("#chat_box", "#inner_box")
+                            if (chat_queue.length == 0) {
+                                is_wait = false
+                            } else {
+                                asyn_send()
+                            }
+                        },
+                        timeout: 60 * 1000
                     })
-                    // $.post({ url: "/chat/api/chat", data: JSON.stringify(front), contentType: 'application/json; charset=utf-8' }, success => {
-                    //     console.log(success)
-                    //     if (success.message != "success") {
-                    //         var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
-                    //         chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
-                    //         createInfo(err_info, true, true)
-                    //     } else {
-                    //         var messages = success.result.messages
-                    //         var usage = success.result.tokens
-                    //         var now_send_tokens = parseInt($('#send_token').html())
-                    //         var now_receive_tokens = parseInt($('#receive_token').html())
-                    //         $('#send_token').html(now_send_tokens + usage.prompt_tokens)
-                    //         $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                    //         if (front.is_create_info) {
-                    //             chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
-                    //         }
-
-                    //         for (var message of messages) {
-                    //             createInfo(message.message.content, roleIsLeft(message.message.role))
-                    //         }
-                    //         for (var i = 0; i < messages.length; ++i) {
-                    //             if (i != messages.length - 1) {
-                    //                 chat_manager.addNewMessage(messages[i].message, 0)
-                    //             } else {
-                    //                 chat_manager.addNewMessage(messages[i].message, usage.completion_tokens)
-                    //             }
-                    //         }
-
-                    //     }
-                    //     scrollChatBoxToBottom("#chat_box", "#inner_box")
-                    //     if (chat_queue.length == 0) {
-                    //         is_wait = false
-                    //     } else {
-                    //         asyn_send()
-                    //     }
-
-                    // })
                 }
 
             }
@@ -550,6 +542,92 @@
             if (!is_wait) {
                 asyn_send()
             }
+        }
+        function oriExportChats(data) {
+            // 将对象数据转换成字符串
+            const jsonData = JSON.stringify(data);
+            // 创建一个 Blob 对象
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            // 创建一个下载链接
+            const url = URL.createObjectURL(blob);
+            // 创建一个 a 标签并设置下载链接
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', "chat");
+            // 模拟点击下载链接
+            link.click();
+            // 释放创建的 URL 对象
+            URL.revokeObjectURL(url);
+        }
+        function exportChats() {
+            data = {}
+            data.messages = chat_manager.messages;
+            data.tokens = chat_manager.tokens;
+
+            if ("showSaveFilePicker" in window) {
+                try {
+                    window.showSaveFilePicker({
+                        types: [
+                            {
+                                description: "Json文件",
+                                accept: { "application/json": [".json"] }
+                            },
+                            {
+                                description: "文本文件",
+                                accept: { "text/plain": [".txt", ".text"] }
+                            },
+
+                        ]
+                    }).then(handle => {
+                        handle.createWritable().then(writable => {
+                            writable.write(JSON.stringify(data)).then(() => {
+                                writable.close()
+                                $("#edit_high_close").click()
+                            })
+                        })
+                    })
+                } catch (e) {
+                    console.error(e)
+                    oriExportChats(data)
+                    $("#edit_high_close").click()
+                }
+            } else {
+                oriExportChats(data)
+                $("#edit_high_close").click()
+            }
+        }
+        function importChats() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            data_str = ""
+            input.onchange = e => {
+
+                // getting a hold of the file reference
+                var file = e.target.files[0];
+
+                // setting up the reader
+                var reader = new FileReader();
+                reader.readAsText(file, 'UTF-8');
+
+                // here we tell the reader what to do when it's done reading...
+                reader.onload = readerEvent => {
+                    var content = readerEvent.target.result; // this is the content!
+                    console.log(content);
+                    data_str = content
+                    data = JSON.parse(data_str)
+                    newCHat()
+                    for (var i=0;i<data.messages.length;++i) {
+                        createInfo(data.messages[i].content, roleIsLeft(data.messages[i].role))
+                        scrollChatBoxToBottom("#chat_box", "#inner_box")
+                        chat_manager.addNewMessage(data.messages[i], data.tokens[i])
+                    }
+                    $("#edit_high_close").click()
+
+                }
+
+            }
+
+            input.click();
         }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
