@@ -13,4 +13,4 @@ Simple web project for calling openai gpt chat api
 - [ ] 提供对不同模型的个性化支持（为GPT4作准备）
 - [ ] 增加用户权限，为不同权限用户提供不同功能
 ## Problem List
-- [ ] 更换无内存泄漏问题的express-session store
+- [x] 更换无内存泄漏问题的express-session store

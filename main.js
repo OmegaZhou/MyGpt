@@ -3,6 +3,7 @@ const express = require('express')
 const session = require('express-session')
 const body_parser = require('body-parser')
 const requestIp = require('request-ip');
+const MemoryStore = require('memorystore')(session)
 const api = require('./api')
 const createRes = api.createRes;
 const API_PATH = '/chat/api/'
@@ -15,7 +16,10 @@ app.use(session({
     },
     saveUninitialized: false,
     resave: false,
-    rolling: true
+    rolling: true,
+    store: new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+    })
 }))
 app.use(requestIp.mw())
 app.use(API_PATH+'login',api.limitLoginTime)
