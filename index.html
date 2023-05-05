@@ -209,7 +209,8 @@
                     <div>
                         <div class="row">
                             <p class="col-2"><b>用户名: </b>Joker</p>
-                            <div class="col-2">
+                            <p class="col-3"><b>用户类型: </b>Guest</p>
+                            <div class="offset-5 col-2 text-end">
                                 <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#deleteUser">删除用户</button>
                             </div>
@@ -257,7 +258,65 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="row">
+                        <div class="form-group input-group">
+                            <label class="input-group-text">修改密码</label>
+                            <input type="password" class="form-control" id="new_password1" placeholder="请输入新密码">
+                            <input type="password" class="form-control" id="new_password2" placeholder="请重新输入新密码">
+                            <button type="button" class="btn btn-light btn-sm">更改</button>
+                        </div>
+                    </div>
+                    <div class="">
+                        <b>可使用模型</b>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
+                                <label class="form-check-label" for="inlineCheckbox1">1</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                <label class="form-check-label" for="inlineCheckbox2">2</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="option3">
+                                <label class="form-check-label" for="inlineCheckbox3">3</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <b>选择用户</b>
+                        <div class="input-group">
+                            <span class="input-group-text">用户列表</span>
+                            <select class="form-select" aria-label="选择用户" id="user_selected">
+                                <option selected value="gpt-3.5-turbo">Joker</option>
+                                <option value="gpt-3.5-turbo-0301">Guest</option>
+                            </select>
+                            <button class="btn btn-md btn-light">选择</button>
+                        </div>
+
+                    </div>
+                    <div class="mt-2">
+                        <b>新建用户</b>
+                        <div class="input-group">
+                            <label class="input-group-text">用户名</label>
+                            <input type="text" class="form-control" id="" placeholder="用户名">
+                            <span class="input-group-text">用户类型</span>
+                            <select class="form-select" aria-label="用户类型" id="user_selected">
+                                <option value="1">Guest</option>
+                                <option selected value="2">User</option>
+                                <option value="4">Guest</option>
+                            </select>
+
+                        </div>
+                        <div class="input-group">
+                            <label class="input-group-text">密码</label>
+                            <input type="password" class="form-control" id="" placeholder="请输入密码">
+                            <input type="password" class="form-control" id="" placeholder="请重新输入密码">
+                            <button class="btn btn-md btn-light">新建用户</button>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="edit_high_close"
                         data-bs-dismiss="modal">关闭</button>
