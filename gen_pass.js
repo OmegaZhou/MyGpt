@@ -12,12 +12,12 @@ function gen_pass_data(){
     const read_pass = ()=>{
         io.question("用户名:\n",user=>{
             if(user.length==0){
-                fs.writeFileSync("password.json", JSON.stringify(data))
+                fs.writeFileSync("./data/user/user_info.json", JSON.stringify(data))
                 return
             }
             io.question("密码:\n",password=>{
                 if(password.length==0){
-                    fs.writeFileSync("password.json", JSON.stringify(data))
+                    fs.writeFileSync("./data/user/user_info.json", JSON.stringify(data))
                     return
                 }
                 const hash = crypto.createHash('sha256');

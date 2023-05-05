@@ -7,6 +7,7 @@ const MemoryStore = require('memorystore')(session)
 const api = require('./api')
 const createRes = api.createRes;
 const API_PATH = '/chat/api/'
+const ADMIN_PATH = '/chat/api/admin/'
 var app = express();
 api.init(app, {max_age : 1000*60*1, max_try : 3})
 app.use(session({
@@ -63,6 +64,13 @@ app.use(API_PATH, (req, res, next)=>{
 })
 app.post(API_PATH + 'chat', api.chat)
 
+app.use(ADMIN_PATH , (req,res)=>{
+    if(auth.get_type(req.session.user) != auth.UserType.AdminType){
+        res.json(createRes("error",{code: "not_permission", message:"无权限"}))
+    }else{
+        next()
+    }
+})
 
 app.listen(20217, function () {
     console.log('listen to port 20217');

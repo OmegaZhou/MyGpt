@@ -2,11 +2,11 @@ const NodeRSA = require("node-rsa")
 const fs = require('fs')
 const auth = require("./auth");
 const axios = require("axios").default
-const private_key = new NodeRSA(fs.readFileSync("./rsa_pri.rsa"),{ encryptionScheme: 'pkcs1' });
+const private_key = new NodeRSA(fs.readFileSync("./data/key/rsa_pri.rsa"),{ encryptionScheme: 'pkcs1' });
 const socks = require("socks-proxy-agent")
-const pub_key = fs.readFileSync("./rsa_pub.rsa")
-auth.read_user_info("password.json")
-API_KEY = fs.readFileSync("./api_key")
+const pub_key = fs.readFileSync("./data/key/rsa_pub.rsa")
+auth.read_user_info("./data/user/user_info.json")
+API_KEY = fs.readFileSync("./data/key/api_key")
 const torProxyAgent = new socks.SocksProxyAgent("socks5://127.0.0.1:10808");
 class AccessRecord
 {
@@ -117,6 +117,7 @@ exports.login = function (req, res) {
     user = decrypt(user)
     if(auth.check_user(user.user, user.password)){
         req.session.login = true
+        req.session.user = user.user
         res.json(createRes("success"))
     }else{
         req.app.locals.ip_record.tryFail(req.clientIp)
@@ -161,6 +162,10 @@ exports.chat = async function(req, res){
 
 exports.get_pub_rsa=function(req,res){
     res.send(pub_key)
+}
+
+exports.get_models = (req, res)=>{
+    return [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}]
 }
 
 function createRes(message, result) {
