@@ -13,6 +13,7 @@
         integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD"
         crossorigin="anonymous"></script>
     <link href="css/prettify-skin-sunburst.css" rel="stylesheet">
+    <script src="js/jsencrypt.min.js"></script>
     <script src="js/prettify.js"></script>
     <script src="js/showdown.min.js"></script>
     <script src="js/showdown-prettify.min.js"></script>
@@ -84,13 +85,13 @@
                     <div class="col-9">
                         <div class="row align-items-start">
                             <div class="col-4">
-                                <b>发送tokens数: </b><span id="send_token">0</span>
+                                <b>发送token数: </b><span id="send_token">0</span>
                             </div>
                             <div class="col-4">
-                                <b>接收tokens数: </b><span id="receive_token">0</span>
+                                <b>接收token: </b><span id="receive_token">0</span>
                             </div>
                             <div class="col-4">
-                                <b>本次tokens数: </b><span id="cur_token">0</span>
+                                <b>本次token: </b><span id="cur_token">0</span>
                             </div>
                         </div>
                         <div class="row align-items-start">
@@ -283,26 +284,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-2">
+                    <div class="mt-2 d-none admin_panel">
                         <b>选择用户</b>
                         <div class="input-group">
                             <span class="input-group-text">用户列表</span>
                             <select class="form-select" aria-label="选择用户" id="user_selected">
-                                <option selected value="gpt-3.5-turbo">Joker</option>
-                                <option value="gpt-3.5-turbo-0301">Guest</option>
                             </select>
-                            <button class="btn btn-md btn-light">选择</button>
+                            <button class="btn btn-md btn-light" onclick="changeCurUser()">选择</button>
                         </div>
 
                     </div>
-                    <div class="mt-2">
+                    <div class="mt-2 d-none admin_panel">
                         <b>新建用户</b>
                         <div class="input-group">
                             <label class="input-group-text">用户名</label>
-                            <input type="text" class="form-control" id="" placeholder="用户名">
+                            <input type="text" class="form-control" id="new_user_name" placeholder="用户名">
                             <span class="input-group-text">用户类型</span>
-                            <select class="form-select" aria-label="用户类型" id="user_selected">
-                                <option value="1">Guest</option>
+                            <select class="form-select" aria-label="用户类型" id="new_user_type">
                                 <option selected value="2">User</option>
                                 <option value="4">Guest</option>
                             </select>
@@ -310,9 +308,11 @@
                         </div>
                         <div class="input-group">
                             <label class="input-group-text">密码</label>
-                            <input type="password" class="form-control" id="" placeholder="请输入密码">
-                            <input type="password" class="form-control" id="" placeholder="请重新输入密码">
-                            <button class="btn btn-md btn-light">新建用户</button>
+                            <input type="password" class="form-control" id="new_user_password1" id=""
+                                placeholder="请输入密码">
+                            <input type="password" class="form-control" id="new_user_password2" id=""
+                                placeholder="请重新输入密码">
+                            <button class="btn btn-md btn-light" onclick="addUserOnclick()">新建用户</button>
                         </div>
                     </div>
                 </div>
@@ -795,8 +795,29 @@
 
             input.click();
         }
-        var my_user_info;
-        var display_uer_info;
+        var pub_key = null;
+        function addUserOnclick() {
+            var pass1 = $('#new_user_password1').val()
+            var pass2 = $('#new_user_password2').val()
+            if (pass1 != pass2) {
+                alert("两次密码不一致")
+            } else {
+                var user = $("#new_user_name").val()
+                var type = $('#new_user_type').val()
+                var encrypt = new JSEncrypt();
+
+                encrypt.setPublicKey(pub_key)
+                user = encrypt.encrypt(user)
+                password = encrypt.encrypt(pass1)
+                type = encrypt.encrypt(type)
+                $('#new_user_password1').val("")
+                $('#new_user_password2').val("")
+                $("#new_user_name").val("")
+                $('#new_user_type').val("2")
+                addUser({user:user, password:password, type: type})
+
+            }
+        }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
 
@@ -826,7 +847,10 @@
                 })
             })
             getUserInfo()
-            
+            $.get('/chat/api/pub_rsa', pub_rsa => {
+                pub_key = pub_rsa
+            })
+
         })
     </script>
 </body>

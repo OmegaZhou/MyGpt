@@ -1,6 +1,7 @@
 const NodeRSA = require("node-rsa")
 const fs = require('fs')
 const auth = require("./auth");
+const modelManager = require('./model')
 const axios = require("axios").default
 const private_key = new NodeRSA(fs.readFileSync("./data/key/rsa_pri.rsa"),{ encryptionScheme: 'pkcs1' });
 const socks = require("socks-proxy-agent")
@@ -78,7 +79,7 @@ class IpRecordManager
         for(var item of this.access_info){
             var key = item[0]
             var value = item[1]
-            console.log(key)
+            //console.log(key)
             if(value.isExpired(this.max_age)){
                 keys.push(key)
             }
@@ -164,10 +165,6 @@ exports.get_pub_rsa=function(req,res){
     res.send(pub_key)
 }
 
-exports.get_models = (req, res)=>{
-    return [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}]
-}
-
 exports.get_user_info = (req, res)=>{
     var result = {}
     result.name = req.session.user
@@ -177,11 +174,55 @@ exports.get_user_info = (req, res)=>{
     result.log = null
     if(auth.get_type(req.session.user) == auth.UserType.AdminType){
         result.user_list = auth.get_users()
-        result.total_models = [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}, {name:"gpt-35-turbo", source:"azure"}]
+        for(var item of result.user_list){
+            item.models = modelManager.get_models(item.name)
+            item.log = null
+        }
+        result.total_models = modelManager.get_total_models()
     }
     res.json(createRes("success", result))
 }
 
+exports.update_password = (req, res)=>{
+    var data = decrypt(req.body)
+    var user_name = data.user
+    var new_password = data.password
+    console.log(data)
+    if(user_name=="" || new_password==""){
+        res.json(createRes("error", {code:"invalid_parameter", message:"用户名或密码不可用"}))
+    }
+    if(user_name==req.user){
+        //auth.update_password(user_name, new_password)
+    }else{
+        if(auth.get_type(user_name)==auth.UserType.AdminType){
+            res.json(createRes("error", {code:"no_permission", message:"无修改权限"}))
+        }else if(auth.get_type(req.user)== auth.UserType.AdminType){
+            //auth.update_password(user_name, new_password)
+            res.json(createRes("success"))
+        }
+    }
+}
+exports.add_user = (req, res)=>{
+    var data = decryptNewUser(req.body)
+    var user_name = data.user
+    var new_password = data.password
+    var user_type = data.type
+    console.log(data)
+    if(user_name=="" || new_password==""){
+        res.json(createRes("error", {code:"invalid_parameter", message:"用户名或密码不可用"}))
+        return
+    }
+    if(user_type!=auth.UserType.GuestType && user_type!=auth.UserType.UserType){
+        res.json(createRes("error", {code:"wrong_type", message:"用户类型错误"}))
+    }else{
+        if(auth.has_user(user_name)){
+            res.json(createRes("error", {code:"user_exits", message:"用户已存在"}))
+        }else{
+            auth.add_user(user_name, new_password, user_type)
+            res.json(createRes("success"))
+        }
+    }
+}
 function createRes(message, result) {
     var res = new Object();
     if (message) {
@@ -198,5 +239,11 @@ function decrypt(user){
     ret.password = private_key.decrypt(user.password).toString()
     return ret
 }
-
+function decryptNewUser(user){
+    var ret = {}
+    ret.user = private_key.decrypt(user.user).toString()
+    ret.password = private_key.decrypt(user.password).toString()
+    ret.type = parseInt(private_key.decrypt(user.type).toString()) 
+    return ret
+}
 exports.createRes = createRes

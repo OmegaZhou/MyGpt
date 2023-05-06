@@ -64,13 +64,15 @@ app.use(API_PATH, (req, res, next)=>{
 })
 app.post(API_PATH + 'chat', api.chat)
 app.get(API_PATH + "get_user_info", api.get_user_info)
-app.use(ADMIN_PATH , (req,res)=>{
+app.post(API_PATH + "change_password", api.update_password)
+app.use(ADMIN_PATH , (req,res, next)=>{
     if(auth.get_type(req.session.user) != auth.UserType.AdminType){
-        res.json(createRes("error",{code: "not_permission", message:"无权限"}))
+        res.json(createRes("error",{code: "not_permission", message:"No permission"}))
     }else{
         next()
     }
 })
+app.post(ADMIN_PATH+"add_user", api.add_user)
 
 app.listen(20217, function () {
     console.log('listen to port 20217');
