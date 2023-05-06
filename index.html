@@ -208,11 +208,11 @@
                 <div class="modal-body">
                     <div>
                         <div class="row">
-                            <p class="col-2"><b>用户名: </b>Joker</p>
-                            <p class="col-3"><b>用户类型: </b>Guest</p>
+                            <p class="col-2"><b>用户名: </b><span id="user_info_name">Joker</span></p>
+                            <p class="col-3"><b>用户类型: </b><span id="user_info_type"> </span></p>
                             <div class="offset-5 col-2 text-end">
                                 <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#deleteUser">删除用户</button>
+                                    data-bs-target="#deleteUser" id="delete_user_button">删除用户</button>
                             </div>
 
                         </div>
@@ -229,31 +229,31 @@
                             <tbody>
                                 <tr>
                                     <td>本月:</td>
-                                    <td>1000</td>
-                                    <td>500</td>
-                                    <td>1500</td>
-                                    <td>$500</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>$0</td>
                                 </tr>
                                 <tr>
                                     <td>本季:</td>
-                                    <td>1200</td>
-                                    <td>600</td>
-                                    <td>1800</td>
-                                    <td>$600</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
                                 </tr>
                                 <tr>
                                     <td>本年:</td>
-                                    <td>1500</td>
-                                    <td>800</td>
-                                    <td>2300</td>
-                                    <td>$800</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
                                 </tr>
                                 <tr>
                                     <td>至今:</td>
-                                    <td>2000</td>
-                                    <td>1000</td>
-                                    <td>3000</td>
-                                    <td>$1000</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -263,12 +263,12 @@
                             <label class="input-group-text">修改密码</label>
                             <input type="password" class="form-control" id="new_password1" placeholder="请输入新密码">
                             <input type="password" class="form-control" id="new_password2" placeholder="请重新输入新密码">
-                            <button type="button" class="btn btn-light btn-sm">更改</button>
+                            <button type="button" class="btn btn-light btn-sm" id="change_password_button">更改</button>
                         </div>
                     </div>
                     <div class="">
                         <b>可使用模型</b>
-                        <div>
+                        <div id="model_can_used">
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
                                 <label class="form-check-label" for="inlineCheckbox1">1</label>
@@ -344,6 +344,7 @@
             </div>
         </div>
     </div>
+    <script src="js/user.js"></script>
     <script>
         var chat_manager = new ChatManager()
         var converter = new showdown.Converter(
@@ -794,6 +795,8 @@
 
             input.click();
         }
+        var my_user_info;
+        var display_uer_info;
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
 
@@ -822,6 +825,8 @@
                     return chats.messages[id].content;
                 })
             })
+            getUserInfo()
+            
         })
     </script>
 </body>

@@ -63,7 +63,7 @@ app.use(API_PATH, (req, res, next)=>{
     }
 })
 app.post(API_PATH + 'chat', api.chat)
-
+app.get(API_PATH + "get_user_info", api.get_user_info)
 app.use(ADMIN_PATH , (req,res)=>{
     if(auth.get_type(req.session.user) != auth.UserType.AdminType){
         res.json(createRes("error",{code: "not_permission", message:"无权限"}))

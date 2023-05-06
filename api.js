@@ -168,6 +168,20 @@ exports.get_models = (req, res)=>{
     return [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}]
 }
 
+exports.get_user_info = (req, res)=>{
+    var result = {}
+    result.name = req.session.user
+    result.type = auth.get_type(req.session.user)
+    result.models = [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}]
+    result.total_models = []
+    result.log = null
+    if(auth.get_type(req.session.user) == auth.UserType.AdminType){
+        result.user_list = auth.get_users()
+        result.total_models = [{name:"gpt-3.5-turbo", source:"openai"}, {name:"gpt-3.5-turbo-0301", source:"openai"}, {name:"gpt-35-turbo", source:"azure"}]
+    }
+    res.json(createRes("success", result))
+}
+
 function createRes(message, result) {
     var res = new Object();
     if (message) {
