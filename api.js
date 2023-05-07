@@ -188,11 +188,12 @@ exports.update_password = (req, res)=>{
     var user_name = data.user
     var new_password = data.password
     console.log(data)
-    if(user_name=="" || new_password==""){
-        res.json(createRes("error", {code:"invalid_parameter", message:"用户名或密码不可用"}))
+    if(user_name=="" || new_password=="" || !auth.has_user(user_name)){
+        res.json(createRes("error", {code:"invalid_parameter", message:"用户名或密码错误"}))
     }
-    if(user_name==req.user){
-        //auth.update_password(user_name, new_password)
+    if(user_name==req.session.user){
+        //auth.update_password(user_name, new_password
+        res.json(createRes("success"))
     }else{
         if(auth.get_type(user_name)==auth.UserType.AdminType){
             res.json(createRes("error", {code:"no_permission", message:"无修改权限"}))
@@ -222,6 +223,20 @@ exports.add_user = (req, res)=>{
             res.json(createRes("success"))
         }
     }
+}
+exports.delete_user = (req, res)=>{
+    var data = req.body
+    var name = data.user
+    if(!auth.has_user(name)){
+        res.json(createRes("error", {code:"user_not_exits", message:"用户不存在"}))
+    }else{
+        if(auth.get_type(req.session.user)!=auth.UserType.AdminType || auth.get_type(name) == auth.UserType.AdminType){
+            res.json(createRes("error", {code:"no_permission", message:"无权限"}))
+        }else{
+            auth.delete_user(name)
+        }
+    }
+    
 }
 function createRes(message, result) {
     var res = new Object();

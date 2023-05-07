@@ -56,10 +56,18 @@ app.get(API_PATH + "pub_rsa", api.get_pub_rsa)
 app.post(API_PATH + 'login', api.login)
 
 app.use(API_PATH, (req, res, next)=>{
+
     if(!req.session.login){
         res.json(createRes("error",{code: "not_login", message:"请先登录"}))
     }else{
-        next()
+        if(!auth.has_user(req.session.user)){
+            delete req.session.login;
+            delete req.session.user
+            res.json(createRes("error",{code: "not_login", message:"请先登录"}))
+        }else{
+            next()
+        }
+        
     }
 })
 app.post(API_PATH + 'chat', api.chat)
@@ -73,7 +81,7 @@ app.use(ADMIN_PATH , (req,res, next)=>{
     }
 })
 app.post(ADMIN_PATH+"add_user", api.add_user)
-
+app.post(ADMIN_PATH+"delete_user", api.deltete_user)
 app.listen(20217, function () {
     console.log('listen to port 20217');
 })

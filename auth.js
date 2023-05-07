@@ -29,6 +29,20 @@ function update_user(user)
     }
     fs.writeFile("./data/user/user_info.json", JSON.stringify(user_info), ()=>{})
 }
+function delete_user(user_name){
+    if(!user_map.has(user_name)){
+        return false
+    }else{
+        user_map.delete(user_name)
+        var new_info = []
+        for(var item of user_info){
+            if(item.user==user_name){
+                new_info.push(item)
+            }
+        }
+        fs.writeFile("./data/user/user_info.json", JSON.stringify(user_info), ()=>{})
+    }
+}
 exports.read_user_info = (path)=>{
     user_info_path = path
     data = fs.readFileSync(path, {encoding:"utf-8"})
@@ -75,4 +89,5 @@ exports.get_users=()=>{
     }
     return ret
 }
+exports.delete_user =delete_user
 return module.exports
