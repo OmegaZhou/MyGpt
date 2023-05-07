@@ -49,12 +49,13 @@ function setUserInfo(user_info, cur_info) {
         $("#user_selected").html('')
         for(var i=0; i< user_info.user_list.length;++i){
             var select_str = ""
-            if(i==0){
+            if(cur_info.name==user_info.user_list[i].name){
                 select_str = "selected"
             }
             var item = $(`<option value="${i}" ${select_str}>${user_info.user_list[i].name}</option>`)
             $("#user_selected").append(item)
         }
+        //changeCurUser()
     }
 }
 function changeCurUser() {
@@ -77,8 +78,10 @@ function getUserInfo() {
 
 function changePassword(data)
 {
-    $.get("/chat/api/change_password",data, (success) => {
+    $.post("/chat/api/change_password",data, (success) => {
+        console.log(success)
         if (success.message == 'success') {
+            alert("修改密码成功")
         } else {
             alert(success.result.message)
         }

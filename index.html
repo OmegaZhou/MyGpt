@@ -264,7 +264,7 @@
                             <label class="input-group-text">修改密码</label>
                             <input type="password" class="form-control" id="new_password1" placeholder="请输入新密码">
                             <input type="password" class="form-control" id="new_password2" placeholder="请重新输入新密码">
-                            <button type="button" class="btn btn-light btn-sm" id="change_password_button">更改</button>
+                            <button type="button" class="btn btn-light btn-sm" id="change_password_button" onclick="setNewPassword()">更改</button>
                         </div>
                     </div>
                     <div class="">
@@ -288,9 +288,8 @@
                         <b>选择用户</b>
                         <div class="input-group">
                             <span class="input-group-text">用户列表</span>
-                            <select class="form-select" aria-label="选择用户" id="user_selected">
+                            <select class="form-select" aria-label="选择用户" id="user_selected" onchange="changeCurUser()">
                             </select>
-                            <button class="btn btn-md btn-light" onclick="changeCurUser()">选择</button>
                         </div>
 
                     </div>
@@ -796,6 +795,24 @@
             input.click();
         }
         var pub_key = null;
+        function setNewPassword(){
+            var pass1 = $('#new_password1').val()
+            var pass2 = $('#new_password2').val()
+            if (pass1 != pass2) {
+                alert("两次密码不一致")
+            } else {
+                var user = $('#user_info_name').html()
+                var encrypt = new JSEncrypt();
+
+                encrypt.setPublicKey(pub_key)
+                user = encrypt.encrypt(user)
+                password = encrypt.encrypt(pass1)
+                $('#new_password1').val('')
+                $('#new_password2').val('')
+                changePassword({user:user, password:password})
+
+            }
+        }
         function addUserOnclick() {
             var pass1 = $('#new_user_password1').val()
             var pass2 = $('#new_user_password2').val()

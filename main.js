@@ -81,7 +81,7 @@ app.use(ADMIN_PATH , (req,res, next)=>{
     }
 })
 app.post(ADMIN_PATH+"add_user", api.add_user)
-app.post(ADMIN_PATH+"delete_user", api.deltete_user)
+app.post(ADMIN_PATH+"delete_user", api.delete_user)
 app.listen(20217, function () {
     console.log('listen to port 20217');
 })
