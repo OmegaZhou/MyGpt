@@ -36,10 +36,11 @@ function delete_user(user_name){
         user_map.delete(user_name)
         var new_info = []
         for(var item of user_info){
-            if(item.user==user_name){
+            if(item.user!=user_name){
                 new_info.push(item)
             }
         }
+        user_info = new_info
         fs.writeFile("./data/user/user_info.json", JSON.stringify(user_info), ()=>{})
     }
 }

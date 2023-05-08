@@ -79,7 +79,6 @@ function getUserInfo() {
 function changePassword(data)
 {
     $.post("/chat/api/change_password",data, (success) => {
-        console.log(success)
         if (success.message == 'success') {
             alert("修改密码成功")
         } else {
@@ -91,10 +90,22 @@ function changePassword(data)
 function addUser(data)
 {
     $.post("/chat/api/admin/add_user",data, (success) => {
-        console.log(success)
         if (success.message == 'success') {
             getUserInfo()
             alert("创建用户成功")
+        } else {
+            alert(success.result.message)
+        }
+    })
+}
+
+function deleteUser()
+{
+    var user_name = cur_user_info.name
+    $.post("/chat/api/admin/delete_user",{user:user_name}, (success) => {
+        if (success.message == 'success') {
+            getUserInfo()
+            alert("删除用户成功")
         } else {
             alert(success.result.message)
         }

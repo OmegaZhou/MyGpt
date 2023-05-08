@@ -264,7 +264,8 @@
                             <label class="input-group-text">修改密码</label>
                             <input type="password" class="form-control" id="new_password1" placeholder="请输入新密码">
                             <input type="password" class="form-control" id="new_password2" placeholder="请重新输入新密码">
-                            <button type="button" class="btn btn-light btn-sm" id="change_password_button" onclick="setNewPassword()">更改</button>
+                            <button type="button" class="btn btn-light btn-sm" id="change_password_button"
+                                onclick="setNewPassword()">更改</button>
                         </div>
                     </div>
                     <div class="">
@@ -338,7 +339,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">确定</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteUserOnclick()">确定</button>
                 </div>
             </div>
         </div>
@@ -795,9 +796,12 @@
             input.click();
         }
         var pub_key = null;
-        function setNewPassword(){
+        function setNewPassword() {
             var pass1 = $('#new_password1').val()
             var pass2 = $('#new_password2').val()
+            if (pass1 == "" || pass2 == "") {
+                return
+            }
             if (pass1 != pass2) {
                 alert("两次密码不一致")
             } else {
@@ -809,13 +813,16 @@
                 password = encrypt.encrypt(pass1)
                 $('#new_password1').val('')
                 $('#new_password2').val('')
-                changePassword({user:user, password:password})
+                changePassword({ user: user, password: password })
 
             }
         }
         function addUserOnclick() {
             var pass1 = $('#new_user_password1').val()
             var pass2 = $('#new_user_password2').val()
+            if (pass1 == "" || pass2 == "" || $("#new_user_name").val() == "") {
+                return
+            }
             if (pass1 != pass2) {
                 alert("两次密码不一致")
             } else {
@@ -831,9 +838,14 @@
                 $('#new_user_password2').val("")
                 $("#new_user_name").val("")
                 $('#new_user_type').val("2")
-                addUser({user:user, password:password, type: type})
+                addUser({ user: user, password: password, type: type })
 
             }
+        }
+        var is_delete = false
+        function deleteUserOnclick()
+        {
+            is_delete = true
         }
         $(document).ready(function () {
             $('#textbox').keypress(keySend)
@@ -863,6 +875,12 @@
                     return chats.messages[id].content;
                 })
             })
+            $("#deleteUser").on("hidden.bs.modal", function () {
+                if(is_delete){
+                    is_delete = false
+                    deleteUser()
+                }
+            });
             getUserInfo()
             $.get('/chat/api/pub_rsa', pub_rsa => {
                 pub_key = pub_rsa

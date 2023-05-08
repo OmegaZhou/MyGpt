@@ -187,16 +187,17 @@ exports.update_password = (req, res) => {
             if (auth.get_type(req.session.user) == auth.UserType.GuestType) {
                 res.json(createRes("error", { code: "no_permission", message: "无修改权限" }))
             } else {
-                //auth.update_password(user_name, new_password
+                auth.update_password(user_name, new_password)
                 res.json(createRes("success"))
             }
         } else {
             if (auth.get_type(user_name) == auth.UserType.AdminType) {
-                console.log(user_name)
                 res.json(createRes("error", { code: "no_permission", message: "无修改权限" }))
             } else if (auth.get_type(req.session.user) == auth.UserType.AdminType) {
-                //auth.update_password(user_name, new_password)
+                auth.update_password(user_name, new_password)
                 res.json(createRes("success"))
+            }else{
+                res.json(createRes("error", { code: "no_permission", message: "无修改权限" }))
             }
         }
     }
