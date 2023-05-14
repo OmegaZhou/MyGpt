@@ -131,8 +131,8 @@ exports.chat = async function (req, res) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + API_KEY,
     }
-    var req_config = {headers: header, httpsAgent: torProxyAgent,httpAgent: torProxyAgent}
-    //var req_config = { headers: header }
+    //var req_config = {headers: header, httpsAgent: torProxyAgent,httpAgent: torProxyAgent}
+    var req_config = { headers: header }
     return axios.post("https://api.openai.com/v1/chat/completions", chat_data, req_config).then(chat_res => {
         var usage = chat_res.data['usage']
         var res_messages = []
