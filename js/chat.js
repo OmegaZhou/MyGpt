@@ -14,6 +14,9 @@ class ChatManager
         }
         this.messages[i] = message
     }
+    updateToken(i, token){
+        this.tokens[i] = token
+    }
     addNewMessage(message, token){
         this.messages.push(message)
         this.tokens.push(token)

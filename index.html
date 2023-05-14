@@ -381,11 +381,10 @@
                 if (front.is_create_info) {
                     createInfo(front.messages[0].content, roleIsLeft(front.messages[0].role))
                     scrollChatBoxToBottom("#chat_box", "#inner_box")
+                    chat_manager.addNewMessage(front.messages[0], 0)
                 }
-
                 is_wait = true
                 if (front.is_cheat) {
-                    chat_manager.addNewMessage(front.messages[0], 0)
                     if (chat_queue.length == 0) {
                         is_wait = false
                     } else {
@@ -396,11 +395,7 @@
                     if (front.use_content) {
                         let tmp = chat_manager.getAllMessage(Infinity)
                         now_tokens = tmp.tokens
-                        if (front.is_create_info) {
-                            front.messages = tmp.messages.concat(front.messages)
-                        } else {
-                            front.messages = tmp.messages
-                        }
+                        front.messages = tmp.messages
                     }
                     $.ajax({
                         type: "POST",
@@ -411,7 +406,7 @@
                             console.log(success)
                             if (success.message != "success") {
                                 var err_info = `<font color='red'>Code:\` ${success.result.code}\` <br/> Error: ${success.result.message} <br/>请联系管理员</font>`
-                                chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
+
                                 createInfo(err_info, true, true)
                             } else {
                                 var messages = success.result.messages
@@ -421,10 +416,7 @@
                                 $("#cur_token").html(usage.prompt_tokens + usage.completion_tokens)
                                 $('#send_token').html(now_send_tokens + usage.prompt_tokens)
                                 $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                                if (front.is_create_info) {
-                                    chat_manager.addNewMessage(front.messages[front.messages.length - 1], usage.prompt_tokens - now_tokens)
-                                }
-
+                                chat_manager.updateToken(chat_manager.tokens.length-1, usage.prompt_tokens - now_tokens)
                                 for (var message of messages) {
                                     createInfo(message.message.content, roleIsLeft(message.message.role))
                                 }
@@ -448,7 +440,6 @@
                         error: (err, status) => {
                             console.log(err)
                             var err_info = `<font color='red'>Code:\` ${err.status}\` <br/> Error: ${status} <br/>请联系管理员</font>`
-                            chat_manager.addNewMessage(front.messages[front.messages.length - 1], 0)
                             createInfo(err_info, true, true)
                             scrollChatBoxToBottom("#chat_box", "#inner_box")
                             if (chat_queue.length == 0) {
