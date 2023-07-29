@@ -336,7 +336,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteUserOnclick()">确定</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                        onclick="deleteUserOnclick()">确定</button>
                 </div>
             </div>
         </div>
@@ -416,7 +417,7 @@
                                 $("#cur_token").html(usage.prompt_tokens + usage.completion_tokens)
                                 $('#send_token').html(now_send_tokens + usage.prompt_tokens)
                                 $('#receive_token').html(now_receive_tokens + usage.completion_tokens)
-                                chat_manager.updateToken(chat_manager.tokens.length-1, usage.prompt_tokens - now_tokens)
+                                chat_manager.updateToken(chat_manager.tokens.length - 1, usage.prompt_tokens - now_tokens)
                                 for (var message of messages) {
                                     createInfo(message.message.content, roleIsLeft(message.message.role))
                                 }
@@ -465,7 +466,7 @@
             var model_info = getModelInfoFromTotalName($("#model").val())
 
             var chat_data = {
-                model: model_info.model, 
+                model: model_info.model,
                 source: model_info.source,
                 messages: [generateOpenaiFormatMessage($("#user_type").val(), text)],
                 use_content: $("#content_save")[0].checked,
@@ -687,8 +688,13 @@
                     message = chat_manager.get(l - 2)
                 }
             }
+            var model_info = getModelInfoFromTotalName($("#model").val())
+
+
             var chat_data = {
-                model: $("#model").val(), messages: [generateOpenaiFormatMessage(message.messages[0].role, message.messages[0].content)],
+                model: model_info.model,
+                source: model_info.source,
+                messages: [generateOpenaiFormatMessage(message.messages[0].role, message.messages[0].content)],
                 use_content: $("#content_save")[0].checked,
                 is_cheat: $('#cheat')[0].checked,
                 is_create_info: false
@@ -834,8 +840,7 @@
             }
         }
         var is_delete = false
-        function deleteUserOnclick()
-        {
+        function deleteUserOnclick() {
             is_delete = true
         }
         $(document).ready(function () {
@@ -867,7 +872,7 @@
                 })
             })
             $("#deleteUser").on("hidden.bs.modal", function () {
-                if(is_delete){
+                if (is_delete) {
                     is_delete = false
                     deleteUser()
                 }
