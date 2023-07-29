@@ -462,9 +462,12 @@
             }
             console.log(text)
 
-            var model = $("#model").val()
+            var model_info = getModelInfoFromTotalName($("#model").val())
+
             var chat_data = {
-                model: model, messages: [generateOpenaiFormatMessage($("#user_type").val(), text)],
+                model: model_info.model, 
+                source: model_info.source,
+                messages: [generateOpenaiFormatMessage($("#user_type").val(), text)],
                 use_content: $("#content_save")[0].checked,
                 is_cheat: $('#cheat')[0].checked,
                 is_create_info: true

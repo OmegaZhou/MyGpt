@@ -7,7 +7,9 @@ const private_key = new NodeRSA(fs.readFileSync("./data/key/rsa_pri.rsa"), { enc
 const socks = require("socks-proxy-agent")
 const pub_key = fs.readFileSync("./data/key/rsa_pub.rsa")
 auth.read_user_info("./data/user/user_info.json")
-API_KEY = fs.readFileSync("./data/key/api_key")
+AzureInfo = JSON.parse(fs.readFileSync("./data/key/azure-key.json"))
+AZURE_API_KEY = AzureInfo.key
+OPENAI_API_KEY = fs.readFileSync("./data/key/api_key")
 const torProxyAgent = new socks.SocksProxyAgent("socks5://127.0.0.1:10808");
 class AccessRecord {
     constructor() {
@@ -123,17 +125,43 @@ exports.login = function (req, res) {
 exports.chat = async function (req, res) {
     var data = req.body
     var messages = data.messages
-    chat_data = {
-        model: data.model,
-        messages: messages
+
+    var chat_data
+    var header
+    var url
+    if(data.source == "azure"){
+        chat_data = {
+            messages: messages
+        }
+        header = {
+            'Content-Type': 'application/json',
+            'api-key': AZURE_API_KEY,
+        }
+        var model_deployment_id = modelManager.get_azure_deployment(data.model)
+        if(!model_deployment_id){
+            res.json(createRes("error", { code: 400, message: "invalid model" }))
+            return
+        }
+        url = `https://${AzureInfo.resource_name}.openai.azure.com/openai/deployments/${model_deployment_id}/chat/completions?api-version=${AzureInfo.api_version}`
+    }else if(data.source == "openai"){
+        chat_data = {
+            model: modelManager.get_openai_model(data.model),
+            messages: messages
+        }
+        header = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + OPENAI_API_KEY,
+        }
+        if(!chat_data.model){
+            res.json(createRes("error", { code: 400, message: "invalid model" }))
+            return
+        }
     }
-    header = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + API_KEY,
-    }
+     
     //var req_config = {headers: header, httpsAgent: torProxyAgent,httpAgent: torProxyAgent}
     var req_config = { headers: header }
-    return axios.post("https://api.openai.com/v1/chat/completions", chat_data, req_config).then(chat_res => {
+    
+    return axios.post(url, chat_data, req_config).then(chat_res => {
         var usage = chat_res.data['usage']
         var res_messages = []
         for (var message of chat_res.data.choices) {
@@ -161,7 +189,7 @@ exports.get_user_info = (req, res) => {
     var result = {}
     result.name = req.session.user
     result.type = auth.get_type(req.session.user)
-    result.models = [{ name: "gpt-3.5-turbo", source: "openai" }, { name: "gpt-3.5-turbo-0301", source: "openai" }]
+    result.models = modelManager.get_models(result.name)
     result.total_models = []
     result.log = null
     if (auth.get_type(req.session.user) == auth.UserType.AdminType) {

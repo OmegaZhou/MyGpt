@@ -4,6 +4,27 @@ var user_types = { 1: "Admin", 2: "User", 4: "Guest" }
 function getModelName(model) {
     return `${model.name}(${model.source})`
 }
+function getModelInfoFromTotalName(name)
+{
+    var i = 0;
+    for(i=name.length-1;i>=0;--i){
+        if(name[i]=='('){
+            break
+        }
+    }
+    return {model: name.substring(0, i), source: name.substring(i+1, name.length-1)}
+}
+function setCanUsedModel()
+{
+    var models = $('#model')
+    models.html('')
+    for (var i = 0; i < my_user_info.models.length; ++i) {
+        var name = getModelName(my_user_info.models[i])
+        var selected_str = i == 0? "selected" : ""
+        var option = $(`<option ${selected_str} value="${name}"}>${name}</option>`)
+        models.append(option)
+    }
+}
 function setStandardUserInfo(user_info, cur_info) {
     $("#user_info_name").html(cur_info.name)
     $("#user_info_type").html(user_types[cur_info.type])
@@ -70,6 +91,7 @@ function getUserInfo() {
             cur_user_info = my_user_info
             console.log(success)
             setUserInfo(my_user_info, cur_user_info)
+            setCanUsedModel()
         } else {
             console.log(success.result)
         }

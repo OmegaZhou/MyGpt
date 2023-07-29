@@ -10,8 +10,13 @@ Simple web project for calling openai gpt chat api
 - [ ] 提供预设对话prompt模板
 - [ ] 允许粘贴图片至输入框
 - [ ] 增加对token个数计算的支持
-- [ ] 提供对不同模型的个性化支持（为GPT4作准备）
-- [ ] 增加用户权限，为不同权限用户提供不同功能
-- [ ] 支持Azure
+- [ ] 增加用户模块
+  - [x] 修改密码
+  - [x] 增加、删除用户
+  - [ ] 统计各用户开销
+  - [ ] 配置各用户可使用模型
+  - [ ] 不同用户提供不同prompt模板
+- [x] 支持Azure
+- [ ] 日志模块，记录用户花费
 ## Problem List
 - [x] 更换无内存泄漏问题的express-session store
