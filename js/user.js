@@ -66,9 +66,6 @@ function setStandardUserInfo(user_info, cur_info) {
         var tmp = new Set()
         for (var item of cur_info.models) {
             tmp.add(getModelName(item))
-            console.log(getModelName(item))
-            console.log(getModelName(user_info.total_models[0]))
-            console.log(tmp.has(getModelName(user_info.total_models[0])))
         }
         for (var i = 0; i < user_info.total_models.length; ++i) {
             var check_box = $('<div class="form-check form-check-inline">')
@@ -76,8 +73,8 @@ function setStandardUserInfo(user_info, cur_info) {
             var checked_str = tmp.has(name) ? "checked" : ""
             check_box.html(`<input class="form-check-input" type="checkbox" id="${name}" value="${i}" ${checked_str}><label  class="form-check-label" for="${name}">${name}</label>`)
             $("#model_can_used").append(check_box)
-
         }
+        $("#save_model_can_used").removeClass("d-none")
     } else {
         for (var i = 0; i < user_info.models.length; ++i) {
             var check_box = $('<div class="form-check form-check-inline">')
@@ -85,6 +82,7 @@ function setStandardUserInfo(user_info, cur_info) {
             check_box.html(`<input class="form-check-input" type="checkbox" id="${name}" value="${i}" checked disabled><label   class="form-check-label" for="${name}">${name}</label>`)
             $("#model_can_used").append(check_box)
         }
+        $("#save_model_can_used").addClass("d-none")
     }
 }
 function setUserInfo(user_info, cur_info) {

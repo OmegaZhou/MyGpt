@@ -275,19 +275,8 @@
                     <div class="">
                         <b>可使用模型</b>
                         <div id="model_can_used">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
-                                <label class="form-check-label" for="inlineCheckbox1">1</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
-                                <label class="form-check-label" for="inlineCheckbox2">2</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="option3">
-                                <label class="form-check-label" for="inlineCheckbox3">3</label>
-                            </div>
                         </div>
+                        <button type="button" class="btn btn-sm btn-light mb-3 d-none" id="save_model_can_used" onclick="saveModelCanUse()">保存</button>
                     </div>
                     <div class="mt-2 d-none admin_panel">
                         <b>选择用户</b>
@@ -392,6 +381,7 @@
     </div>
     <script src="js/user.js"></script>
     <script>
+
         var chat_manager = new ChatManager()
         var converter = new showdown.Converter(
             {
@@ -863,6 +853,22 @@
                console.log(data)
             }
             $.post("/chat/api/admin/update_models", {data:data}, (success)=>{
+                initFromUserInfo(success.result)
+                $('#model_info_edit_modal').modal('hide')
+            })
+        }
+        function saveModelCanUse()
+        {
+            var data = {data:[]}
+            var inputs = $("#model_can_used").find("input")
+            for(var item of inputs){
+                if(item.checked){
+                    data.data.push(getModelInfoFromTotalName(item.id))
+                }
+                
+            }
+            data.name = cur_user_info.name
+            $.post("/chat/api/admin/update_user_models", data, (success)=>{
                 initFromUserInfo(success.result)
                 $('#model_info_edit_modal').modal('hide')
             })

@@ -4,10 +4,30 @@ var azure_model_map
 const ModelInfoPath = "./data/model/models.json"
 ModelInfo = JSON.parse(fs.readFileSync(ModelInfoPath))
 var user_models =  JSON.parse(fs.readFileSync("./data/model/user_models.json"))
+var user_maps;
 const AzureSource = "Azure"
 const OpenaiSource = "Openai"
 exports.AzureSource = AzureSource
 exports.OpenaiSource = OpenaiSource
+function updateUserMap()
+{
+    user_maps = new Map()
+    for(var user of user_models)
+    {
+        var s = {azure: new Set(), openai: new Set()}
+        for(var item of user.azure_models){
+            if(azure_model_map.has(item)){
+                s.azure.add(item)
+            }
+        }
+        for(var item of user.openai_models){
+            if(openai_model_map.has(item)){
+                s.openai.add(item)
+            }
+        }
+        user_maps.set(user.name, s)
+    }
+}
 function init(){
     openai_model_map = new Map()
     azure_model_map = new Map()
@@ -34,6 +54,7 @@ function init(){
         user.azure_models = azure_models
         user.openai_models = openai_models
     }
+    updateUserMap()
     fs.writeFile("./data/model/user_models.json", JSON.stringify(user_models), ()=>{})
 }
 init()
@@ -51,17 +72,17 @@ exports.get_models  = (user_name)=>{
     }
     return ret
 }
-exports.update_models = (user_name, model_list)=>{
+exports.update_user_models = (user_name, model_list)=>{
     for(var user of user_models){
         var azure_models = []
         var openai_models = []
         if(user.name==user_name){
             for(var model of model_list){
-                if(model.source == AzureSource && azure_model_map.has(model.name)){
-                    azure_models.push(model.name)
+                if(model.source == AzureSource && azure_model_map.has(model.model)){
+                    azure_models.push(model.model)
                 }
-                if(model.source == OpenaiSource && openai_model_map.has(model.name)){
-                    openai_models.push(model.name)
+                if(model.source == OpenaiSource && openai_model_map.has(model.model)){
+                    openai_models.push(model.model)
                 }
             }
             user.azure_models = azure_models
@@ -70,6 +91,7 @@ exports.update_models = (user_name, model_list)=>{
             break
         }
     }
+    updateUserMap()
 }
 exports.delete_user = (user_name)=>{
     var new_info = []
@@ -80,10 +102,12 @@ exports.delete_user = (user_name)=>{
     }
     user_models = new_info
     fs.writeFile("./data/model/user_models.json", JSON.stringify(user_models), ()=>{})
+    updateUserMap()
 }
 exports.add_user = (user_name, model_list)=>{
     user_models.push(user_name)
     update_models(user_name, model_list)
+    updateUserMap()
 }
 exports.get_total_models= ()=>{
     var ret = []
@@ -120,6 +144,20 @@ exports.get_azure_deployment =(name)=>
 }
 exports.get_openai_model =(name)=>
 {
-    return openai_model_map_model_map.get(name)
+    return openai_model_map.get(name)
 }
-return exports
+exports.get_azure_deployment_by_user =(name, user)=>
+{
+    if(user_maps.get(user).azure.has(name)){
+        return azure_model_map.get(name)
+    }
+    return null
+}
+exports.get_openai_model_by_user =(name, user)=>
+{
+    if(user_maps.get(user).openai.has(name)){
+        return openai_model_map.get(name)
+    }
+    return null
+    
+}

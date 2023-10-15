@@ -14,7 +14,7 @@ Simple web project for calling openai gpt chat api
   - [x] 修改密码
   - [x] 增加、删除用户
   - [ ] 统计各用户开销
-  - [ ] 配置各用户可使用模型
+  - [x] 配置各用户可使用模型
   - [ ] 不同用户提供不同prompt模板
 - [x] 支持Azure
 - [ ] 日志模块，记录用户花费

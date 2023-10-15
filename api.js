@@ -132,6 +132,7 @@ exports.chat = async function (req, res) {
     var chat_data
     var header
     var url
+    var user = req.session.user
     if(data.source == modelManager.AzureSource){
         chat_data = {
             messages: messages
@@ -140,15 +141,20 @@ exports.chat = async function (req, res) {
             'Content-Type': 'application/json',
             'api-key': AZURE_API_KEY,
         }
-        var model_deployment_id = modelManager.get_azure_deployment(data.model)
+        var model_deployment_id = modelManager.get_azure_deployment_by_user(data.model, user)
         if(!model_deployment_id){
             res.json(createRes("error", { code: 400, message: "invalid model" }))
             return
         }
         url = `https://${AzureInfo.resource_name}.openai.azure.com/openai/deployments/${model_deployment_id}/chat/completions?api-version=${AzureInfo.api_version}`
     }else if(data.source == modelManager.OpenaiSource){
+        var model_name =  modelManager.get_openai_model_by_user(data.model, user)
+        if(!model_name){
+            res.json(createRes("error", { code: 400, message: "invalid model" }))
+            return
+        }
         chat_data = {
-            model: modelManager.get_openai_model(data.model),
+            model:model_name,
             messages: messages
         }
         header = {
@@ -269,6 +275,12 @@ exports.delete_user = (req, res) => {
         }
     }
 
+}
+exports.update_user_models = (req, res)=>{
+    var data = req.body.data
+    var name = req.body.name
+    modelManager.update_user_models(name,data)
+    exports.get_user_info(req, res)
 }
 exports.update_models = (req, res)=>{
     var data = req.body.data
