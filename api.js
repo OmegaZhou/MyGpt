@@ -132,7 +132,7 @@ exports.chat = async function (req, res) {
     var chat_data
     var header
     var url
-    if(data.source == "azure"){
+    if(data.source == modelManager.AzureSource){
         chat_data = {
             messages: messages
         }
@@ -146,7 +146,7 @@ exports.chat = async function (req, res) {
             return
         }
         url = `https://${AzureInfo.resource_name}.openai.azure.com/openai/deployments/${model_deployment_id}/chat/completions?api-version=${AzureInfo.api_version}`
-    }else if(data.source == "openai"){
+    }else if(data.source == modelManager.OpenaiSource){
         chat_data = {
             model: modelManager.get_openai_model(data.model),
             messages: messages
