@@ -1,13 +1,16 @@
 const fs = require("fs")
-var openai_model_map = new Map()
-var azure_model_map = new Map()
-const ModelInfo = JSON.parse(fs.readFileSync("./data/model/models.json"))
+var openai_model_map
+var azure_model_map
+const ModelInfoPath = "./data/model/models.json"
+ModelInfo = JSON.parse(fs.readFileSync(ModelInfoPath))
 var user_models =  JSON.parse(fs.readFileSync("./data/model/user_models.json"))
-const AzureSource = "azure"
-const OpenaiSource = "openai"
+const AzureSource = "Azure"
+const OpenaiSource = "Openai"
 exports.AzureSource = AzureSource
 exports.OpenaiSource = OpenaiSource
 function init(){
+    openai_model_map = new Map()
+    azure_model_map = new Map()
     for(var item of ModelInfo.azure_models){
         azure_model_map.set(item.name, item.model)
     }
@@ -85,12 +88,31 @@ exports.add_user = (user_name, model_list)=>{
 exports.get_total_models= ()=>{
     var ret = []
     for(var item of ModelInfo.azure_models){
-        ret.push({name:item.name, source:"azure"})
+        ret.push({name:item.name, source:AzureSource, deployment: item.model})
     }
     for(var item of ModelInfo.openai_models){
-        ret.push({name:item.name, source:"openai"})
+        ret.push({name:item.name, source:OpenaiSource, deployment: item.model})
     }
     return ret
+}
+exports.update_models = (new_models)=>{
+    var tmp = {}
+    tmp.azure_models=[]
+    tmp.openai_models=[]
+    console.log(new_models)
+    for(var item of new_models){
+        if(item.name && item.deployment){
+            if(item.source==OpenaiSource){
+                tmp.openai_models.push({name:item.name, model:item.deployment})
+            }else if(item.source==AzureSource){
+                tmp.azure_models.push({name:item.name, model:item.deployment})
+            }
+        }
+        
+    }
+    ModelInfo = tmp
+    fs.writeFile(ModelInfoPath, JSON.stringify(ModelInfo), ()=>{})
+    init()
 }
 exports.get_azure_deployment =(name)=>
 {

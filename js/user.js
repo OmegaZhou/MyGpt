@@ -14,6 +14,27 @@ function getModelInfoFromTotalName(name)
     }
     return {model: name.substring(0, i), source: name.substring(i+1, name.length-1)}
 }
+function addModelInfo(model)
+{
+    var row = $(`<tr class='model_item'><td>${model.name}</td><td>${model.deployment}</td><td>${model.source}</td></tr>`)
+    var delete_button = $(`<button class="btn btn-md btn-light">删除</button>`)
+    delete_button.click(()=>{
+        delete_button.closest("tr").remove()
+    })
+    var td = $('<td></td>')
+    td.append(delete_button)
+    row.append(td)
+    $("#model_info_table").append(row)
+}
+
+function setTotalModel()
+{
+    $("#model_info_table").find(".model_item").remove()
+    for (var i = 0; i < my_user_info.total_models.length; ++i) {
+        addModelInfo(my_user_info.total_models[i])
+    }
+}
+
 function setCanUsedModel()
 {
     var models = $('#model')
@@ -45,6 +66,9 @@ function setStandardUserInfo(user_info, cur_info) {
         var tmp = new Set()
         for (var item of cur_info.models) {
             tmp.add(getModelName(item))
+            console.log(getModelName(item))
+            console.log(getModelName(user_info.total_models[0]))
+            console.log(tmp.has(getModelName(user_info.total_models[0])))
         }
         for (var i = 0; i < user_info.total_models.length; ++i) {
             var check_box = $('<div class="form-check form-check-inline">')
@@ -52,6 +76,7 @@ function setStandardUserInfo(user_info, cur_info) {
             var checked_str = tmp.has(name) ? "checked" : ""
             check_box.html(`<input class="form-check-input" type="checkbox" id="${name}" value="${i}" ${checked_str}><label  class="form-check-label" for="${name}">${name}</label>`)
             $("#model_can_used").append(check_box)
+
         }
     } else {
         for (var i = 0; i < user_info.models.length; ++i) {
@@ -76,7 +101,10 @@ function setUserInfo(user_info, cur_info) {
             var item = $(`<option value="${i}" ${select_str}>${user_info.user_list[i].name}</option>`)
             $("#user_selected").append(item)
         }
+        $("#model_info_edit").removeClass("d-none")
         //changeCurUser()
+    }else{
+        $("#model_info_edit").addClass("d-none")
     }
 }
 function changeCurUser() {
@@ -87,17 +115,23 @@ function changeCurUser() {
 function getUserInfo() {
     $.get("/chat/api/get_user_info", (success) => {
         if (success.message == 'success') {
-            my_user_info = success.result
-            cur_user_info = my_user_info
             console.log(success)
-            setUserInfo(my_user_info, cur_user_info)
-            setCanUsedModel()
+            initFromUserInfo(success.result)
         } else {
             console.log(success.result)
         }
     })
 }
-
+function initFromUserInfo(user)
+{
+    my_user_info = user
+    cur_user_info = my_user_info
+    setUserInfo(my_user_info, cur_user_info)
+    setCanUsedModel()
+    if (user_types[my_user_info.type] == "Admin"){
+        setTotalModel()
+    }
+}
 function changePassword(data)
 {
     $.post("/chat/api/change_password",data, (success) => {

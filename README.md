@@ -18,5 +18,6 @@ Simple web project for calling openai gpt chat api
   - [ ] 不同用户提供不同prompt模板
 - [x] 支持Azure
 - [ ] 日志模块，记录用户花费
+- [x] 支持管理员添加新的模型
 ## Problem List
 - [x] 更换无内存泄漏问题的express-session store

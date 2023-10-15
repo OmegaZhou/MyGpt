@@ -117,8 +117,12 @@
                 <div class="col-2">
                     <div class="form-check">
                         <button class="btn btn-primary" type="button" id="reset" onclick="newCHat()">开始新对话</button>
+
                     </div>
+
                 </div>
+                <button class="btn btn-dark fixed-top offset-11 col-1" style="position: fixed; right: 0; top: 0;"
+                    type="button" onclick="logout()">退出登录</button>
             </div>
         </div>
         <div id="chat_box" class="container h-75 overflow-y-auto">
@@ -185,12 +189,15 @@
                         <button type="submit" class="btn btn-sm btn-light mb-3" onclick="exportChats()">导出对话</button>
                         <button type="submit" class="btn btn-sm btn-light mb-3" onclick="importChats()">导入对话</button>
                     </div>
+                    <div id="model_info_edit" class="input-group">
+                        <button type="button" class="btn btn-sm btn-light mb-3" data-bs-toggle="modal"
+                            data-bs-target="#model_info_edit_modal">编辑可用模型</button>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="edit_high_close"
                             data-bs-dismiss="modal">关闭</button>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -342,6 +349,47 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="model_info_edit_modal" tabindex="-1" role="dialog"
+        aria-labelledby="model_info_edit_modal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">可用模型编辑</h4>
+                    <button type="button" class="btn-close close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table" id="model_info_table">
+                        <tr>
+                            <th>模型名</th>
+                            <th>部署名</th>
+                            <th>来源</th>
+                            <th></th>
+                        </tr>
+
+                    </table>
+                    <div class="mt-2 d-none admin_panel">
+                        <b>添加模型</b>
+                        <div class="input-group">
+                            <label class="input-group-text">模型名</label>
+                            <input type="text" class="form-control" id="new_model_name" placeholder="模型名">
+                            <label class="input-group-text">部署名</label>
+                            <input type="text" class="form-control" id="new_model_deployment" placeholder="部署名">
+                            <span class="input-group-text">来源</span>
+                            <select class="form-select" aria-label="模型来源" id="new_model_type">
+                                <option selected value="Azure">Azure</option>
+                                <option value="Openai">OpenAi</option>
+                            </select>
+                            <button class="btn btn-md btn-light" onclick="addModelOnclick()">添加模型</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="saveModelInfo()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="js/user.js"></script>
     <script>
         var chat_manager = new ChatManager()
@@ -487,6 +535,11 @@
             is_wait = false
             $('#inner_box').html('')
             scrollChatBoxToBottom("#chat_box", "#inner_box")
+        }
+        function logout() {
+            $.get("/chat/api/logout", (data) => {
+                window.location = "/chat/login.html"
+            })
         }
         function roleIsLeft(role) {
             if (role == 'assistant') {
@@ -791,6 +844,28 @@
             }
 
             input.click();
+        }
+        function addModelOnclick()
+        {
+            addModelInfo({name:$("#new_model_name").val(), deployment:$("#new_model_deployment").val(), source:$("#new_model_type").val()})
+            $("#new_model_name").val('')
+            $("#new_model_deployment").val('')
+            $("#new_model_type").val('Azure')
+        }
+        function saveModelInfo()
+        {
+            var items = $("#model_info_table").find(".model_item")
+            var data = []
+            console.log(items)
+            for(var item of items){
+               var infos = $(item).children()
+               data.push({name:$(infos[0]).html().trim(), deployment:$(infos[1]).html().trim(), source:$(infos[2]).html().trim()})
+               console.log(data)
+            }
+            $.post("/chat/api/admin/update_models", {data:data}, (success)=>{
+                initFromUserInfo(success.result)
+                $('#model_info_edit_modal').modal('hide')
+            })
         }
         var pub_key = null;
         function setNewPassword() {

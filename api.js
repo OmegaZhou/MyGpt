@@ -121,7 +121,10 @@ exports.login = function (req, res) {
     }
 
 }
-
+exports.logout = function (req, res) {
+    req.session.destroy();
+    res.json(createRes("success"))
+}
 exports.chat = async function (req, res) {
     var data = req.body
     var messages = data.messages
@@ -266,6 +269,11 @@ exports.delete_user = (req, res) => {
         }
     }
 
+}
+exports.update_models = (req, res)=>{
+    var data = req.body.data
+    modelManager.update_models(data)
+    exports.get_user_info(req, res)
 }
 function createRes(message, result) {
     var res = new Object();
