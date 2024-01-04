@@ -257,6 +257,7 @@ exports.add_user = (req, res) => {
             res.json(createRes("error", { code: "user_exits", message: "用户已存在" }))
         } else {
             auth.add_user(user_name, new_password, user_type)
+            modelManager.add_user(user_name)
             res.json(createRes("success"))
         }
     }
@@ -271,6 +272,7 @@ exports.delete_user = (req, res) => {
             res.json(createRes("error", { code: "no_permission", message: "无权限" }))
         } else {
             auth.delete_user(name)
+            modelManager.delete_user(name)
             res.json(createRes("success"))
         }
     }

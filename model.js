@@ -104,9 +104,10 @@ exports.delete_user = (user_name)=>{
     fs.writeFile("./data/model/user_models.json", JSON.stringify(user_models), ()=>{})
     updateUserMap()
 }
-exports.add_user = (user_name, model_list)=>{
-    user_models.push(user_name)
-    update_models(user_name, model_list)
+exports.add_user = (user_name)=>{
+    user_models.push({name:user_name, openai_models:[], azure_models:[]})
+    //console.log(user_models)
+    fs.writeFile("./data/model/user_models.json", JSON.stringify(user_models), ()=>{})
     updateUserMap()
 }
 exports.get_total_models= ()=>{
